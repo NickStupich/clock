@@ -1,91 +1,76 @@
-"""from bokeh.plotting import figure, show
-
-fruits = ['Apples', 'Pears', 'Nectarines', 'Plums', 'Grapes', 'Strawberries']
-counts = [5, 3, 4, 2, 4, 6]
-
-p = figure(x_range=fruits, height=350, title="Fruit Counts",
-           toolbar_location=None, tools="")
-
-p.vbar(x=fruits, top=counts, width=0.9)
-
-p.xgrid.grid_line_color = None
-p.y_range.start = 0
-
-show(p)
-
-
-import numpy as np
-
-from bokeh.io import curdoc, show
-from bokeh.models import AnnularWedge, ColumnDataSource, Grid, LinearAxis, Plot
-
-N = 9
-x = np.linspace(-2, 2, N)
-y = x**2
-r = x/12.0+0.4
-
-source = ColumnDataSource(dict(x=x, y=y, r=r))
-
-plot = Plot(
-    title=None, width=300, height=300,
-    min_border=0, toolbar_location=None)
-
-glyph = AnnularWedge(x="x", y="y", inner_radius=.2, outer_radius="r", start_angle=0.6, end_angle=4.1, fill_color="#8888ee")
-plot.add_glyph(source, glyph)
-
-xaxis = LinearAxis()
-plot.add_layout(xaxis, 'below')
-
-yaxis = LinearAxis()
-plot.add_layout(yaxis, 'left')
-
-plot.add_layout(Grid(dimension=0, ticker=xaxis.ticker))
-plot.add_layout(Grid(dimension=1, ticker=yaxis.ticker))
-
-# curdoc().add_root(plot)
-
-show(plot)"""
-
 import numpy as np
 from bokeh.plotting import figure, show
-from bokeh.models import AnnularWedge, ColumnDataSource, Grid, LinearAxis, Plot, Rect
-
-N = 9
-x = np.linspace(-2, 2, N)
-y = x**2
-r = x/12.0+0.4
-
-source = ColumnDataSource(dict(x=x, y=y, r=r))
-
-plot = Plot(
-    title=None, width=1000, height=1000,
-    min_border=0, toolbar_location=None)#,x_range=(0, 1000), y_range=(0, 1000))
-
-# glyph = AnnularWedge(x="x", y="y", inner_radius=.2, outer_radius="r", start_angle=0.6, end_angle=4.1, fill_color="#8888ee")
-# plot.add_glyph(source, glyph)
+from bokeh.models import AnnularWedge, ColumnDataSource, Grid, LinearAxis, Plot, Rect, Circle
+from bokeh.models import Range1d
 
 
-clockHand = AnnularWedge(x=234, y=456, inner_radius=0, outer_radius=100, start_angle=0.2, end_angle=0.3, fill_color="#ee8888")
-plot.add_glyph(clockHand)
+n_rows = 3
+n_cols = 8
 
-glyph = Rect(x=234, y=456, width=100, height=10, angle=-0.7, fill_color="#cab2d6")
-plot.add_glyph(source, glyph)
+def draw_single_clock(center, angles):
+    hand_length = 130
+    hand_width = 20
+    clock_radius = 140
+
+    hand_color = "#cab2d6"
+
+    angle_minute, angle_hour = angles
+
+    hour_rect_center = (center[0] + np.cos(angle_hour) * hand_length/2, center[1] + np.sin(angle_hour) * hand_length/2)
+    minute_rect_center = (center[0] + np.cos(angle_minute) * hand_length/2, center[1] + np.sin(angle_minute) * hand_length / 2)
+
+    glyph = Circle(x=center[0], y=center[1], radius=clock_radius, line_color="#3288bd", fill_color="#eeeeee", line_width=1)
+    plot.add_glyph(glyph)
+
+    glyph = Rect(x=hour_rect_center[0], y=hour_rect_center[1], width=hand_length, height=hand_width, angle=angle_hour, fill_color=hand_color)
+    plot.add_glyph(glyph)
+
+    glyph = Rect(x=minute_rect_center[0], y=minute_rect_center[1], width=hand_length, height=hand_width, angle=angle_minute, fill_color=hand_color)
+    plot.add_glyph(glyph)
+
+    glyph = Circle(x=center[0], y=center[1], radius=hand_width, fill_color=hand_color, line_width=1)
+    plot.add_glyph(glyph)
 
 
-# xaxis = LinearAxis()
-# plot.add_layout(xaxis, 'below')
+def draw_full_clock(angles):
 
-# yaxis = LinearAxis()
-# plot.add_layout(yaxis, 'left')
+    border_padding = 50
+    distance_between_clocks = 300
+    border_outline_padding = 20
 
-# plot.add_layout(Grid(dimension=0, ticker=xaxis.ticker))
-# plot.add_layout(Grid(dimension=1, ticker=yaxis.ticker))
+    #total required dimensions
+    # print(border_padding*2 + distance_between_clocks * n_rows)
+    # print(border_padding*2 + distance_between_clocks * n_cols)
+
+    #background border
+    x = (border_padding * 2 + distance_between_clocks * (n_cols))/2 
+    y = (border_padding * 2 + distance_between_clocks * (n_rows))/2 
+    w = (border_padding * 2 + distance_between_clocks * (n_cols)) - 2 * border_outline_padding
+    h = (border_padding * 2 + distance_between_clocks * (n_rows)) - 2 * border_outline_padding
+
+    glyph = Rect(x=x, y=y, width=w, height=h, fill_color="#dddddd")
+
+    plot.add_glyph(glyph)
+    
+    for row in range(n_rows):
+        for col in range(n_cols):
+            center = (border_padding + (col + 0.5) * distance_between_clocks, border_padding + (row + 0.5) * distance_between_clocks)
+            draw_single_clock(center, angles[n_rows - row -1 ,col]) #plotting is bottom up
 
 
-# fig.x_range = Range1d(0, 1000) 
-# fig.y_range = Range1d(0, 1000) 
+if __name__ == "__main__":
 
-figure.x_range.start = 0
-figure.x_range.end = 1000
+    plot = Plot(
+        title=None, width=2500, height=1000,
+        min_border=0, toolbar_location=None,
+        x_range=Range1d(0, 2500), y_range=Range1d(0, 1000))
 
-show(plot)
+    #time = 20:49
+    angles = np.pi * np.array([
+                [(0,0),     (1, 1.5),   (0, 1.5, ),     (1, 1.5),       (1.5, 1.5),     (1.5, 1.5),     (0, 1.5),   (1, 1.5)    ],
+                [(0,1.5),   (1, 0.5),   (0.5, 1.5,),    (0.5, 1.5),     (0, 0.5),       (0.5, 1.5),     (0, 0.5),   (0.5, 1.5)  ],
+                [(0,0.5),   (1, 1),     (0, 0.5, ),     (0.5, 1),       (1.25, 1.25),   (0.5, 0.5),     (0, 0),     (0.5, 1)    ],
+            ])
+
+    draw_full_clock(angles)
+    show(plot)
