@@ -7,7 +7,197 @@ from bokeh.plotting import figure, ColumnDataSource
 from bokeh.models import Plot, Range1d
 from threading import Thread
 
+import datetime
+
 import DrawClock
+
+def draw_digit(n, angles):
+    if n == 0:
+        angles[0,0,0] = 0
+        angles[0,0,1] = 270
+        angles[0,1,0] = 180
+        angles[0,1,1] = 270
+
+        angles[1,0,0] = 90
+        angles[1,0,1] = 270
+        angles[1,1,0] = 90
+        angles[1,1,1] = 270
+
+        angles[2,0,0] = 90
+        angles[2,0,1] = 0
+        angles[2,1,0] = 180
+        angles[2,1,1] = 90
+
+    elif n == 1: #TODO: should the vertical line be on the left if it's the 2nd digit?
+        angles[0,0,0] = 225
+        angles[0,0,1] = 225
+        angles[0,1,0] = 270
+        angles[0,1,1] = 270
+
+        angles[1,0,0] = 225
+        angles[1,0,1] = 225
+        angles[1,1,0] = 90
+        angles[1,1,1] = 270
+
+        angles[2,0,0] = 225
+        angles[2,0,1] = 225
+        angles[2,1,0] = 90
+        angles[2,1,1] = 90
+
+    elif n == 2: 
+        angles[0,0,0] = 0
+        angles[0,0,1] = 0
+        angles[0,1,0] = 180
+        angles[0,1,1] = 270
+
+        angles[1,0,0] = 0
+        angles[1,0,1] = 270
+        angles[1,1,0] = 180
+        angles[1,1,1] = 90
+
+        angles[2,0,0] = 90
+        angles[2,0,1] = 0
+        angles[2,1,0] = 180
+        angles[2,1,1] = 180
+
+    elif n == 3: 
+        angles[0,0,0] = 0
+        angles[0,0,1] = 0
+        angles[0,1,0] = 180
+        angles[0,1,1] = 270
+
+        angles[1,0,0] = 0
+        angles[1,0,1] = 0
+        angles[1,1,0] = 180
+        angles[1,1,1] = 90
+
+        angles[2,0,0] = 0
+        angles[2,0,1] = 0
+        angles[2,1,0] = 90
+        angles[2,1,1] = 180
+
+    elif n == 4: 
+        angles[0,0,0] = 270
+        angles[0,0,1] = 270
+        angles[0,1,0] = 270
+        angles[0,1,1] = 270
+
+        angles[1,0,0] = 90
+        angles[1,0,1] = 0
+        angles[1,1,0] = 270
+        angles[1,1,1] = 90
+
+        angles[2,0,0] = 225
+        angles[2,0,1] = 225
+        angles[2,1,0] = 90
+        angles[2,1,1] = 90
+
+    elif n == 5: 
+        angles[0,0,0] = 0
+        angles[0,0,1] = 270
+        angles[0,1,0] = 180
+        angles[0,1,1] = 180
+
+        angles[1,0,0] = 90
+        angles[1,0,1] = 0
+        angles[1,1,0] = 180
+        angles[1,1,1] = 270
+
+        angles[2,0,0] = 0
+        angles[2,0,1] = 0
+        angles[2,1,0] = 180
+        angles[2,1,1] = 90
+
+    elif n == 6: 
+        angles[0,0,0] = 0
+        angles[0,0,1] = 270
+        angles[0,1,0] = 180
+        angles[0,1,1] = 180
+
+        angles[1,0,0] = 90
+        angles[1,0,1] = 270
+        angles[1,1,0] = 180
+        angles[1,1,1] = 270
+
+        angles[2,0,0] = 90
+        angles[2,0,1] = 0
+        angles[2,1,0] = 180
+        angles[2,1,1] = 90
+
+    elif n == 7: 
+        angles[0,0,0] = 0
+        angles[0,0,1] = 0
+        angles[0,1,0] = 180
+        angles[0,1,1] = 270
+
+        angles[1,0,0] = 225
+        angles[1,0,1] = 225
+        angles[1,1,0] = 90
+        angles[1,1,1] = 270
+
+        angles[2,0,0] = 225
+        angles[2,0,1] = 225
+        angles[2,1,0] = 90
+        angles[2,1,1] = 90
+
+    elif n == 8: 
+        angles[0,0,0] = 0
+        angles[0,0,1] = 270
+        angles[0,1,0] = 180
+        angles[0,1,1] = 270
+
+        angles[1,0,0] = 90
+        angles[1,0,1] = 0
+        angles[1,1,0] = 90
+        angles[1,1,1] = 180
+
+        angles[2,0,0] = 90
+        angles[2,0,1] = 0
+        angles[2,1,0] = 90
+        angles[2,1,1] = 180
+
+    elif n == 9: 
+        angles[0,0,0] = 0
+        angles[0,0,1] = 270
+        angles[0,1,0] = 180
+        angles[0,1,1] = 270
+
+        angles[1,0,0] = 90
+        angles[1,0,1] = 0
+        angles[1,1,0] = 90
+        angles[1,1,1] = 270
+
+        angles[2,0,0] = 0
+        angles[2,0,1] = 0
+        angles[2,1,0] = 90
+        angles[2,1,1] = 180
+
+
+# counter = 0
+def modify_hand_angles_current_time(hand_angles):
+
+    cur_time = datetime.datetime.now()
+    hour = cur_time.hour
+    minute = cur_time.minute
+
+    # global counter
+    # hour = counter % 100
+    # minute = counter % 100
+    # counter += 1
+
+    # print(hour, minute)
+
+    hour1 = hour // 10
+    hour2 = hour % 10
+
+    minute1 = minute // 10
+    minute2 = minute % 10
+
+    draw_digit(hour1, hand_angles[:, 0:2])
+    draw_digit(hour2, hand_angles[:, 2:4])
+    draw_digit(minute1, hand_angles[:, 4:6])
+    draw_digit(minute2, hand_angles[:, 6:8])
+
 
 class BokehApp():
     hand_angles = DrawClock.clock_positions_base
@@ -34,10 +224,10 @@ class BokehApp():
 
     def startDataAcquisition(self):
         while not self.stop_data_thread:
-            self.hand_angles[0][0][0] += 0.1
+            modify_hand_angles_current_time(self.hand_angles)
             time.sleep(0.05)
         print('data thread is done!')
-        
+
 
     update_count = 0
     def make_document(self, doc):
