@@ -10,10 +10,8 @@ from threading import Thread
 import DrawClock
 
 class BokehApp():
-    plot_data = []
     hand_angles = DrawClock.clock_positions_base
-    last_data_length = None
-
+    
     stop_data_thread = False
 
     def __init__(self):
@@ -28,45 +26,35 @@ class BokehApp():
             io_loop.start()
 
         except KeyboardInterrupt as e:
-            print('KeyboardInterrupt')
             self.stop_data_thread = True
             thread.join()
-            print('joined')
             server.stop()
             raise e
-            # thread.kill()
 
 
     def startDataAcquisition(self):
         while not self.stop_data_thread:
-            self.plot_data.append({'x': [random.random()], 'y': [random.random()], 'color': [random.choice(['red', 'blue', 'green'])]})
             self.hand_angles[0][0][0] += 0.1
-            print('moved hands')
-            time.sleep(0.1)
+            time.sleep(0.05)
         print('data thread is done!')
+        
 
     update_count = 0
     def make_document(self, doc):
-        # source = ColumnDataSource({'x': [], 'y': [], 'color': []})
-        # fig = figure(title = 'Streaming Circle Plot!', sizing_mode = 'scale_both')
-        # fig.circle(source = source, x = 'x', y = 'y', color = 'color', size = 10)
-
+        source = ColumnDataSource(DrawClock.angles_to_source_dict(self.hand_angles))
 
         plot = DrawClock.create_plot()
+        DrawClock.draw_full_clock_by_source(plot, source)
 
         def update():
-            print('updating[%d]...' % self.update_count)
-            # if self.last_data_length is not None and self.last_data_length != len(self.plot_data):
-            #     source.stream(self.plot_data[-1])
-            # self.last_data_length = len(self.plot_data)
-
-            DrawClock.draw_full_clock(plot, self.hand_angles)
-            print('done[%d]' % self.update_count)
-
+            # print('updating[%d]...' % self.update_count)
+            new_data_dict = DrawClock.angles_to_source_dict(self.hand_angles)
+            source.data = new_data_dict
+            # print('done[%d]' % self.update_count)
             self.update_count+=1
 
         doc.add_root(plot)
-        doc.add_periodic_callback(update, 100)
+        doc.add_periodic_callback(update, 50)
 
 if __name__ == '__main__':
     app = BokehApp()
