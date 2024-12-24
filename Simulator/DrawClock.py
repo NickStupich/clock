@@ -16,7 +16,7 @@ clock_positions_base = np.array([
                 [(0,0),     (180, 270),   (0, 270 ),     (180, 270),       (270, 270),     (270, 270),     (0, 270),   (180, 270)    ],
                 [(0,270),   (180, 90),   (90, 270),    (90, 270),     (0, 90),       (90, 270),     (0, 90),   (90, 270)  ],
                 [(0,90),   (180, 180),     (0, 90 ),     (90, 180),       (225, 225),   (90, 90),     (0, 0),     (90, 180)    ],
-            ])
+            ], dtype='float')
 
 n_rows = 3
 n_cols = 8
@@ -27,7 +27,7 @@ if 1:
     border_outline_padding = 20
 
     hand_length = 130
-    hand_width = 20
+    hand_width = 25
     clock_radius = 140
 
     plot_width = 2500
@@ -43,6 +43,22 @@ else:
 
     plot_width = 1250
     plot_height = 500
+
+
+#colors
+if 0: #first pass
+    hand_color = "#cab2d6"
+    background_color = "#dddddd"
+    individual_recess_line_color = "#3288bd"
+    individual_recess_fill_color = "#eeeeee"
+else: #black and rose gold
+    # hand_color = "#b76e79"
+    # hand_color = "#FFD700"
+    hand_color = "#d08050"
+    background_color = "#111111"
+    individual_recess_line_color = "#333333"
+    individual_recess_fill_color = "#222222"
+
 
 def draw_single_clock(plot, center, angles):
 
@@ -96,7 +112,6 @@ def draw_full_clock(plot, angles):
 def draw_full_clock_by_source(plot, source):
     start = datetime.datetime.now()
 
-    hand_color = "#cab2d6"
     plot.renderers = []
 
 
@@ -106,11 +121,11 @@ def draw_full_clock_by_source(plot, source):
     w = (border_padding * 2 + distance_between_clocks * (n_cols)) - 2 * border_outline_padding
     h = (border_padding * 2 + distance_between_clocks * (n_rows)) - 2 * border_outline_padding
 
-    glyph = Rect(x=x, y=y, width=w, height=h, fill_color="#dddddd")
+    glyph = Rect(x=x, y=y, width=w, height=h, fill_color=background_color)
     plot.add_glyph(glyph)
 
 
-    glyph = Circle(x='centers_x', y='centers_y', radius=clock_radius, line_color="#3288bd", fill_color="#eeeeee", line_width=1)
+    glyph = Circle(x='centers_x', y='centers_y', radius=clock_radius, line_color=individual_recess_line_color, fill_color=individual_recess_fill_color, line_width=1)
     plot.add_glyph(source, glyph)
 
     glyph = Rect(x='hour_rect_centers_x', y='hour_rect_centers_y', width=hand_length, height=hand_width, angle='hour_angles', fill_color=hand_color)
@@ -119,10 +134,10 @@ def draw_full_clock_by_source(plot, source):
     glyph = Rect(x='minute_rect_centers_x', y='minute_rect_centers_y', width=hand_length, height=hand_width, angle='minute_angles', fill_color=hand_color)
     plot.add_glyph(source, glyph)
 
-    glyph = Circle(x='centers_x', y='centers_y', radius=hand_width, fill_color=hand_color, line_width=1)
+    glyph = Circle(x='centers_x', y='centers_y', radius=hand_width/2, fill_color=hand_color, line_width=1)
     plot.add_glyph(source, glyph)
 
-    print('full draw time: ', (datetime.datetime.now() - start))
+    # print('full draw time: ', (datetime.datetime.now() - start))
 
 
 def create_plot():
