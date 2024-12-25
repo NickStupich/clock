@@ -65,7 +65,7 @@ def update_real_hand_angles_from_targets(actual_hand_angles, target_hand_angles,
     accelerations[np.where(distance_remaining < 0)] = -ACCELERATION
 
     hand_velocities += accelerations
-    hand_velocities = np.clip(hand_velocities, a_min=-MAX_VELOCITY, a_max=MAX_VELOCITY)    
+    np.clip(hand_velocities, a_min=-MAX_VELOCITY, a_max=MAX_VELOCITY, out=hand_velocities)    
 
     move = hand_velocities #no scaling yet
 
@@ -118,6 +118,7 @@ class ClockHandController(object):
             time.sleep(0.5)
             if(modify_hand_angles_current_time(self.target_hand_angles)):
                 self.arduinoInterface.transmitTargetPositions(self.target_hand_angles)
+
 
     def updateDrawPositionsThreadFunc(self):
         while not self.stop_threads_flag:
