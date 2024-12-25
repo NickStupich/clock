@@ -1,119 +1,34 @@
 import numpy as np
+
 from bokeh.plotting import figure, show
-from bokeh.models import AnnularWedge, ColumnDataSource, Grid, LinearAxis, Plot, Rect, Circle
-from bokeh.models import Range1d
+from bokeh.models import AnnularWedge, ColumnDataSource, Grid, LinearAxis, Plot, Rect, Circle, Range1d
 
-import datetime
-
-# clock_positions_base = np.pi * np.array([
-#                 [(0,0),     (1, 1.5),   (0, 1.5, ),     (1, 1.5),       (1.5, 1.5),     (1.5, 1.5),     (0, 1.5),   (1, 1.5)    ],
-#                 [(0,1.5),   (1, 0.5),   (0.5, 1.5,),    (0.5, 1.5),     (0, 0.5),       (0.5, 1.5),     (0, 0.5),   (0.5, 1.5)  ],
-#                 [(0,0.5),   (1, 1),     (0, 0.5, ),     (0.5, 1),       (1.25, 1.25),   (0.5, 0.5),     (0, 0),     (0.5, 1)    ],
-#             ])
-
-
-clock_positions_base = np.array([
-                [(0,0),     (180, 270),   (0, 270 ),     (180, 270),       (270, 270),     (270, 270),     (0, 270),   (180, 270)    ],
-                [(0,270),   (180, 90),   (90, 270),    (90, 270),     (0, 90),       (90, 270),     (0, 90),   (90, 270)  ],
-                [(0,90),   (180, 180),     (0, 90 ),     (90, 180),       (225, 225),   (90, 90),     (0, 0),     (90, 180)    ],
-            ], dtype='float')
 
 n_rows = 3
 n_cols = 8
+clock_positions_base = np.ones((n_rows, n_cols, 2)) * 270
 
-if 1:
-    border_padding = 50
-    distance_between_clocks = 300
-    border_outline_padding = 20
+#dimensions
+border_padding = 50
+distance_between_clocks = 300
+border_outline_padding = 20
 
-    hand_length = 130
-    hand_width = 25
-    clock_radius = 140
+hand_length = 130
+hand_width = 25
+clock_radius = 140
 
-    plot_width = 2500
-    plot_height = 1000 #dimensions
-else:
-    border_padding = 25
-    distance_between_clocks = 150
-    border_outline_padding = 10
+plot_width = 2500
+plot_height = 1000 
 
-    hand_length = 65
-    hand_width = 10
-    clock_radius = 70
-
-    plot_width = 1250
-    plot_height = 500
-
-
-#colors
-if 0: #first pass
-    hand_color = "#cab2d6"
-    background_color = "#dddddd"
-    individual_recess_line_color = "#3288bd"
-    individual_recess_fill_color = "#eeeeee"
-else: #black and rose gold
-    # hand_color = "#b76e79"
-    # hand_color = "#FFD700"
-    hand_color = "#d08050"
-    background_color = "#111111"
-    individual_recess_line_color = "#333333"
-    individual_recess_fill_color = "#222222"
-
-
-def draw_single_clock(plot, center, angles):
-
-    hand_color = "#cab2d6"
-
-    angle_minute, angle_hour = angles
-
-    hour_rect_center = (center[0] + np.cos(angle_hour) * hand_length/2, center[1] + np.sin(angle_hour) * hand_length/2)
-    minute_rect_center = (center[0] + np.cos(angle_minute) * hand_length/2, center[1] + np.sin(angle_minute) * hand_length / 2)
-
-    
-    glyph = Circle(x=center[0], y=center[1], radius=clock_radius, line_color="#3288bd", fill_color="#eeeeee", line_width=1)
-    plot.add_glyph(glyph)
-
-    glyph = Rect(x=hour_rect_center[0], y=hour_rect_center[1], width=hand_length, height=hand_width, angle=angle_hour, fill_color=hand_color)
-    plot.add_glyph(glyph)
-
-    glyph = Rect(x=minute_rect_center[0], y=minute_rect_center[1], width=hand_length, height=hand_width, angle=angle_minute, fill_color=hand_color)
-    plot.add_glyph(glyph)
-
-    glyph = Circle(x=center[0], y=center[1], radius=hand_width, fill_color=hand_color, line_width=1)
-    plot.add_glyph(glyph)
-    
-
-def draw_full_clock(plot, angles):
-    start = datetime.datetime.now()
-
-    plot.renderers = []
-
-    #total required dimensions
-    # print(border_padding*2 + distance_between_clocks * n_rows)
-    # print(border_padding*2 + distance_between_clocks * n_cols)
-
-    #background border
-    x = (border_padding * 2 + distance_between_clocks * (n_cols))/2 
-    y = (border_padding * 2 + distance_between_clocks * (n_rows))/2 
-    w = (border_padding * 2 + distance_between_clocks * (n_cols)) - 2 * border_outline_padding
-    h = (border_padding * 2 + distance_between_clocks * (n_rows)) - 2 * border_outline_padding
-
-    glyph = Rect(x=x, y=y, width=w, height=h, fill_color="#dddddd")
-    plot.add_glyph(glyph)
-    
-    for row in range(n_rows):
-        for col in range(n_cols):
-            center = (border_padding + (col + 0.5) * distance_between_clocks, border_padding + (row + 0.5) * distance_between_clocks)
-            draw_single_clock(plot, center, angles[n_rows - row -1 ,col]) #plotting is bottom up
-
-    print('full draw time: ', (datetime.datetime.now() - start))
+#colors - black and rose gold
+hand_color = "#d08050"
+background_color = "#111111"
+individual_recess_line_color = "#333333"
+individual_recess_fill_color = "#222222"
 
 
 def draw_full_clock_by_source(plot, source):
-    start = datetime.datetime.now()
-
     plot.renderers = []
-
 
     #background border
     x = (border_padding * 2 + distance_between_clocks * (n_cols))/2 
@@ -137,8 +52,6 @@ def draw_full_clock_by_source(plot, source):
     glyph = Circle(x='centers_x', y='centers_y', radius=hand_width/2, fill_color=hand_color, line_width=1)
     plot.add_glyph(source, glyph)
 
-    # print('full draw time: ', (datetime.datetime.now() - start))
-
 
 def create_plot():
     plot = Plot(
@@ -156,8 +69,6 @@ def angles_to_source_dict(angles):
         for row in range(n_rows)[::-1] #drawn bottom to top
         for col in range(n_cols)
         ])
-
-    # print(flat_angles)
 
     hour_angles = flat_angles[:, 0]
     minute_angles = flat_angles[:, 1]
@@ -186,14 +97,12 @@ def angles_to_source_dict(angles):
     }
 
     return source_dict
+    
 
 if __name__ == "__main__":
 
     plot2 = create_plot()
-
-    #time = 20:49
     angles = clock_positions_base
 
-    # draw_full_clock(plot2, angles)
     draw_full_clock_by_source(plot2, ColumnDataSource(angles_to_source_dict(angles)))
     show(plot2)
