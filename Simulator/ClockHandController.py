@@ -138,4 +138,3 @@ class ClockHandController(object):
         self.clock_enabled = not self.clock_enabled
         self.arduinoInterface.setEnabledState(self.clock_enabled)
         if self.bokehApp: self.bokehApp.setEnabledState(self.clock_enabled)
-        print('update clock state')

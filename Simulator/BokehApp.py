@@ -26,7 +26,7 @@ class BokehApp():
             port = 5001,
             allow_websocket_origin=["localhost:5001", "10.0.0.110:5001", "10.0.0.151:5001"])
         server.start()
-        server.show('/myapp')
+        #server.show('/myapp')
 
         try:
             io_loop.start()
@@ -37,7 +37,6 @@ class BokehApp():
             raise e
 
     def enableButton_click(self, event):
-        print('enableToggle_click')
         self.chc.toggleClockEnabledState()
 
 

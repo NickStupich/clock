@@ -35,7 +35,7 @@ else:
 				gpio.setup(cs_pin, gpio.OUT)
 				gpio.output(cs_pin, gpio.HIGH)
 
-			self.spi.max_speed_hz = 10000
+			self.spi.max_speed_hz = 1000000
 
 
 		def transmitTargetPositions(self, target_angles):
