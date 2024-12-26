@@ -14,12 +14,15 @@ if test_environment:
 
 		def transmitTargetPositions(self, target_angles):
 			pass
+
+		def setEnabledState(self, enabled):
+			pass
 else:
     
 	import spidev
 	import numpy as np
 
-	cs_pins = [22, 27, 17] #9, 10 are untested
+	cs_pins = [22, 27, 17] 
 
 	class ArduinoInterface(object):
 		def __init__(self, clock_hand_controller):
@@ -49,14 +52,19 @@ else:
 				time.sleep(0.01)
 				gpio.output(cs_pin, gpio.HIGH)
 				#print(response, len(response))
+
+
+		def setEnabledState(self, enabled):
+			#output a gpio led
+			pass
+
 		#on changed state from arduino gpios:
-		#self.chc.updateClockState(disabled=True)
+		#if self.chc: self.chc.toggleClockState()
 
 
 if __name__ == "__main__":
     ai = ArduinoInterface(None)
     import numpy as np
-    #x = np.array([1, 2, 3, 4], dtype='int')
     x = np.ones((3, 8, 2), dtype='int')
     x[0,0,0] = 1000
     x[1,1,1] = 42

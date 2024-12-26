@@ -22,41 +22,6 @@ def add_transition_animation(angles):
     animation_counter+=1
 
 
-last_target = None
-def modify_hand_angles_current_time(hand_angles):
-    global last_target
-
-    cur_time = datetime.datetime.now()
-    hour = cur_time.hour
-    minute = cur_time.minute
-
-    hour1 = hour // 10
-    hour2 = hour % 10
-
-    minute1 = minute // 10
-    minute2 = minute % 10
-
-    if (hour, minute) != last_target:
-        DrawCharacters.draw_digit(hour1, hand_angles[:, 0:2])
-        DrawCharacters.draw_digit(hour2, hand_angles[:, 2:4])
-        DrawCharacters.draw_digit(minute1, hand_angles[:, 4:6])
-        DrawCharacters.draw_digit(minute2, hand_angles[:, 6:8])
-
-        add_transition_animation(hand_angles)
-        
-        last_target = (hour, minute)
-
-        return True
-
-    if 0:
-        DrawCharacters.draw_letter('f', hand_angles[:, 0:2])
-        DrawCharacters.draw_letter('u', hand_angles[:, 2:4])
-        DrawCharacters.draw_letter('c', hand_angles[:, 4:6])
-        DrawCharacters.draw_letter('k', hand_angles[:, 6:8])
-
-    return False
-
-
 def update_real_hand_angles_from_targets(actual_hand_angles, target_hand_angles, hand_velocities):
     distance_remaining = target_hand_angles - actual_hand_angles
 
@@ -90,8 +55,13 @@ class ClockHandController(object):
     hand_velocities = np.zeros_like(DrawClock.clock_positions_base)
 
     stop_threads_flag = False
+    
+    last_target = None
 
-    def __init__(self):
+    def __init__(self, bokehApp=None):
+
+        self.bokehApp = bokehApp
+        self.clock_enabled = False
 
         self.arduinoInterface = ArduinoInterface.ArduinoInterface(self)
 
@@ -103,6 +73,43 @@ class ClockHandController(object):
         self.drawPositionThread = Thread(target = self.updateDrawPositionsThreadFunc)
         self.drawPositionThread.start()
 
+
+
+    def modify_hand_angles_current_time(self, hand_angles):
+
+        if self.clock_enabled:
+            cur_time = datetime.datetime.now()
+            hour = cur_time.hour
+            minute = cur_time.minute
+
+            hour1 = hour // 10
+            hour2 = hour % 10
+
+            minute1 = minute // 10
+            minute2 = minute % 10
+        else:
+            hour1 = hour2 = minute1 = minute2 = -1
+
+        new_target = (hour1, hour2, minute1, minute2)
+
+        if new_target != self.last_target:
+            DrawCharacters.draw_digit(hour1, hand_angles[:, 0:2])
+            DrawCharacters.draw_digit(hour2, hand_angles[:, 2:4])
+            DrawCharacters.draw_digit(minute1, hand_angles[:, 4:6])
+            DrawCharacters.draw_digit(minute2, hand_angles[:, 6:8])
+
+            if self.clock_enabled: add_transition_animation(hand_angles)
+            self.last_target = new_target
+
+            return True
+
+        if 0:
+            DrawCharacters.draw_letter('f', hand_angles[:, 0:2])
+            DrawCharacters.draw_letter('u', hand_angles[:, 2:4])
+            DrawCharacters.draw_letter('c', hand_angles[:, 4:6])
+            DrawCharacters.draw_letter('k', hand_angles[:, 6:8])
+
+        return False
 
     def getDrawPositions(self):
         return self.actual_hand_angles
@@ -116,7 +123,8 @@ class ClockHandController(object):
 
         while not self.stop_threads_flag:
             time.sleep(0.5)
-            if(modify_hand_angles_current_time(self.target_hand_angles)):
+
+            if(self.modify_hand_angles_current_time(self.target_hand_angles)):
                 self.arduinoInterface.transmitTargetPositions(self.target_hand_angles)
 
 
@@ -125,6 +133,9 @@ class ClockHandController(object):
             time.sleep(0.05)
             update_real_hand_angles_from_targets(self.actual_hand_angles, self.target_hand_angles, self.hand_velocities)
 
-    def updateClockState(self, disabled):
-        self.clock_disabled = disabled
+
+    def toggleClockEnabledState(self):
+        self.clock_enabled = not self.clock_enabled
+        self.arduinoInterface.setEnabledState(self.clock_enabled)
+        if self.bokehApp: self.bokehApp.setEnabledState(self.clock_enabled)
         print('update clock state')

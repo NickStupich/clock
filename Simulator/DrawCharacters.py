@@ -1,6 +1,22 @@
 
 def draw_digit(n, angles):
-    if n == 0:
+    if n == -1: #disabled state
+        angles[0,0,0] = 270
+        angles[0,0,1] = 270
+        angles[0,1,0] = 270
+        angles[0,1,1] = 270
+
+        angles[1,0,0] = 270
+        angles[1,0,1] = 270
+        angles[1,1,0] = 270
+        angles[1,1,1] = 270
+
+        angles[2,0,0] = 270
+        angles[2,0,1] = 270
+        angles[2,1,0] = 270
+        angles[2,1,1] = 270
+
+    elif n == 0:
         angles[0,0,0] = 0
         angles[0,0,1] = 270
         angles[0,1,0] = 180

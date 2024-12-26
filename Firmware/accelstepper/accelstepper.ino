@@ -8,7 +8,6 @@
 
 char buf [100];
 volatile byte pos;
-volatile boolean process_it;
 
 #define DEGREES_TO_STEPS(x)  (3*x)
 #define NUM_STEPS (DEGREES_TO_STEPS(360))
@@ -99,22 +98,17 @@ AccelStepper steppers[NUM_MOTORS] = {
   AccelStepper(stepper16_fw, stepper16_bw)
 };
 
-int16_t inputTargets[NUM_MOTORS*3+1];// = {0}; //extra sync bytes
-int inputTargetsIndex = 0;
-
+int16_t inputTargets[NUM_MOTORS*3+1]; //extra sync bytes at end
 bool new_targets = false;
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
+  /*
   Serial.print("__Enter a step position from 0 through ");
   Serial.print(NUM_STEPS);
   Serial.println(".");
-
-  Serial3.begin(9600);
-
-  //setPrescaler(1, 1);
-  //setPrescaler(2, 1);
+  */
 
   for(int i=0;i<NUM_MOTORS;i++) {
     steppers[i].setMaxSpeed(500.0);
@@ -131,7 +125,6 @@ void setup() {
   SPCR |= _BV(SPIE);
   
   pos = 0;
-  process_it = false;
 
   SPI.attachInterrupt();
 }
@@ -140,116 +133,44 @@ void setup() {
 // SPI interrupt routine
 ISR (SPI_STC_vect)
 {
-byte c = SPDR;
-//Serial.print(c);
+  byte c = SPDR;  
+  buf [pos++] = c;
   
-    buf [pos++] = c;
-    //Serial.println(pos);
-    
-    if(pos == (NUM_MOTORS*6+2))
-    {
-        new_targets = true;
-        for(int i=0;i<NUM_MOTORS*3;i++) {
-          byte c1 = buf[i*2];
-          byte c2 = buf[i*2+1];
+  if(pos == (NUM_MOTORS*2+2))
+  {
+      new_targets = true;
+      for(int i=0;i<NUM_MOTORS;i++) {
+        byte c1 = buf[i*2];
+        byte c2 = buf[i*2+1];
 
-          int16_t c = (c1<<8) + c2;
-          inputTargets[i] = c;
-
-        }
-        pos = 0;
-    }
-    // example: newline means time to process buffer
-    /*if (c == 0xff)
-      process_it = true;
-      
-    }  // end of room available
-    */
-    
+        int16_t c = (c1<<8) + c2;
+        inputTargets[i] = c;
+      }
+      pos = 0;
+  }
+  
 }
 
 void loop(void)
-{
-  static int nextPos = 0;
-  // the motor only moves when you call run()
-  
+{  
   for(int i=0;i<NUM_MOTORS;i++) {
     steppers[i].run();
   }
 
   if(new_targets) {
     Serial.println("new targets");
-    for(int i=0;i<NUM_MOTORS*3;i++) {
-
-         Serial.println(inputTargets[i]);
-        
-        steppers[0].moveTo(DEGREES_TO_STEPS(inputTargets[0]));
-
-        }
-        Serial.println("\n\n");
-        new_targets = false;
-  }
-  else
-  {
-     //delay(100);
-     //Serial.println(pos);
-  }
-  /*
-  if (process_it)
-    {
-    buf [pos] = 0;  
-    Serial.println (buf);
-    pos = 0;
-    process_it = false;
-    }  // end of flag set
-    else 
-    { 
-      //Serial.println(pos);
-    }*/
-  /*
-  if(Serial1.available()) {
-    unsigned char c1 = Serial1.read();
-    Serial.println(c1);
-  }
-*/
-/*
-  if(Serial3.available() >= 2) {
-    unsigned char c1 = Serial3.read();
-    unsigned char c2 = Serial3.read();
-
-    int16_t c = (c1<<8) + c2;
-    
-    Serial.print(inputTargetsIndex);
-    Serial.print("\t\t");
-    //Serial.println(c);
-    Serial.print(c1);
-    Serial.print("\t");
-    Serial.println(c2);
-    inputTargets[inputTargetsIndex] = c;
-    inputTargetsIndex++;
-
-    //Serial.print(c3);
-    //Serial.print("\t");
-    //Serial.print(inputTargetsIndex);
-    //Serial.println("");
-    //inputTargetsChar[inputTargetsIndex] = c3;
-    //((unsigned char*)&inputTargets)[inputTargetsIndex] = c3;
-    //inputTargetsIndex++;
-
-    if(inputTargetsIndex == (NUM_MOTORS*3+1))
-    {
-      Serial.println("");
-      Serial.println("full update");
-      //Serial.print(inputTargets[NUM_MOTORS-1]);
-      inputTargetsIndex = 0;
-
-      steppers[0].moveTo(inputTargets[0]);
+    for(int i=0;i<NUM_MOTORS;i++) {
+      Serial.println(inputTargets[i]);
+      steppers[0].moveTo(DEGREES_TO_STEPS(inputTargets[0]));
     }
-  }*/
+    Serial.println("\n");
+    new_targets = false;
+  }
 
+  /*
+  static int nextPos = 0;
   if (Serial.available()) {
     char c = Serial.read();
-    //Serial.print(c);
     if (c==10 || c==13) {
       steppers[0].moveTo(nextPos);
       nextPos = 0;
@@ -268,4 +189,5 @@ void loop(void)
       Serial.println(micros());
     }
   }
+  */
 }
