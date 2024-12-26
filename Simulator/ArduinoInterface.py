@@ -19,36 +19,36 @@ else:
 	import spidev
 	import numpy as np
 
+	cs_pins = [22, 27, 17] #9, 10 are untested
+
 	class ArduinoInterface(object):
 		def __init__(self, clock_hand_controller):
 			self.chc = clock_hand_controller
-			#self.ser = serial.Serial('/dev/serial0', baudrate=9600)
 			self.spi = spidev.SpiDev()
 			self.spi.open(0,1)
 			gpio.setmode(gpio.BCM)
-			gpio.setup(8, gpio.OUT)
-			gpio.output(8, gpio.HIGH)
+			for cs_pin in cs_pins:	
+				print('setting up pin ', cs_pin)
+				gpio.setup(cs_pin, gpio.OUT)
+				gpio.output(cs_pin, gpio.HIGH)
 
 			self.spi.max_speed_hz = 10000
 
 
 		def transmitTargetPositions(self, target_angles):
-			print(target_angles.astype('int16'), target_angles.shape)
-			to_send = np.ascontiguousarray(target_angles, dtype='>i2').tobytes() + b'\xff\xff'
-			# print('sending: ', to_send)
+			#print(target_angles.astype('int16'), target_angles.shape)
 
-			#to_send = to_send[0,:,:].tobytes()
-			#send2 = to_send[1,:,:].tobytes()
-			#send3 = to_send[2,:,:].tobytes()
+			for row, cs_pin in enumerate(cs_pins):
+				to_send = np.ascontiguousarray(target_angles[row], dtype='>i2').tobytes() + b'\xff\xff'
 
-			print(to_send, len(to_send))
+				print(row, cs_pin, to_send, len(to_send))
             
-			gpio.output(8, gpio.LOW)
-			time.sleep(0.01)
-			response = self.spi.xfer2(to_send)
-			time.sleep(0.01)
-			gpio.output(8, gpio.HIGH)
-			print(response, len(response))
+				gpio.output(cs_pin, gpio.LOW)
+				time.sleep(0.01)
+				response = self.spi.xfer2(to_send)
+				time.sleep(0.01)
+				gpio.output(cs_pin, gpio.HIGH)
+				#print(response, len(response))
 		#on changed state from arduino gpios:
 		#self.chc.updateClockState(disabled=True)
 
