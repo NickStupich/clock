@@ -14,8 +14,8 @@ volatile byte pos;
 #define NUM_MOTORS (16)
 
 MotorVID28 motor1(NUM_STEPS, false, 9, 10, 11);
-MotorVID28 motor2(NUM_STEPS, false, 1, 2, 3);
-MotorVID28 motor3(NUM_STEPS, false, 4, 5, 6);
+MotorVID28 motor2(NUM_STEPS, false, 3, 2, 4);
+MotorVID28 motor3(NUM_STEPS, false, 6, 5, 7);
 MotorVID28 motor4(NUM_STEPS, false, 12, 13, 14);
 MotorVID28 motor5(NUM_STEPS, false, 15, 16, 17);
 MotorVID28 motor6(NUM_STEPS, false, 18, 19, 20);
@@ -161,7 +161,7 @@ void loop(void)
     Serial.println("new targets");
     for(int i=0;i<NUM_MOTORS;i++) {
       Serial.println(inputTargets[i]);
-      steppers[0].moveTo(DEGREES_TO_STEPS(inputTargets[0]));
+      steppers[i].moveTo(DEGREES_TO_STEPS(inputTargets[i]));
     }
     Serial.println("\n");
     new_targets = false;

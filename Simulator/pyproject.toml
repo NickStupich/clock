@@ -9,6 +9,9 @@ readme = "README.md"
 python = "^3.10"
 tornado = "^6.4.2"
 bokeh = "^3.6.2"
+svglib = "^1.5.1"
+selenium = "^4.27.1"
+geckodriver = "^0.0.1"
 
 
 [build-system]
