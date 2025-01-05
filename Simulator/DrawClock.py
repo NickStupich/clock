@@ -95,9 +95,24 @@ def create_pdf():
     glyph = Circle(x='centers_x', y='centers_y', radius= main_radius, line_color=individual_recess_line_color, line_width=1, fill_alpha=0.2)
     plot.add_glyph(source, glyph)
 
+    main_radius = 1 * scale
+    glyph = Circle(x='centers_x', y='centers_y', radius= main_radius, line_color=individual_recess_line_color, line_width=1, fill_alpha=0.)
+    plot.add_glyph(source, glyph)
+
 
     #support posts    
     support_radius = 1.5 * scale
+    glyph = Circle(x='support1_x', y='support1_y', radius=support_radius, line_color=individual_recess_line_color, line_width=1, fill_alpha=0)
+    plot.add_glyph(source, glyph)
+
+    glyph = Circle(x='support2_x', y='support2_y', radius=support_radius, line_color=individual_recess_line_color, line_width=1, fill_alpha=0)
+    plot.add_glyph(source, glyph)
+
+    glyph = Circle(x='support3_x', y='support3_y', radius=support_radius, line_color=individual_recess_line_color, line_width=1, fill_alpha=0)
+    plot.add_glyph(source, glyph)
+
+
+    support_radius = 1. * scale
     glyph = Circle(x='support1_x', y='support1_y', radius=support_radius, line_color=individual_recess_line_color, line_width=1, fill_alpha=0)
     plot.add_glyph(source, glyph)
 

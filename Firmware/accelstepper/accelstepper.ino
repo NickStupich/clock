@@ -2,6 +2,7 @@
 #include "AccelStepper.h"
 
 #include "MotorVID28.h"
+#include "util.h"
 
 #include <SPI.h>
 #include "pins_arduino.h"
@@ -9,94 +10,119 @@
 char buf [100];
 volatile byte pos;
 
-#define DEGREES_TO_STEPS(x)  (3*x)
+#if 1
+bool microstepMode = true;
+#define STEPS_PER_STEP (4)
+#else
+bool microstepMode = false;
+#define STEPS_PER_STEP (1)
+#endif
+
+#define USE_ACCELSTEPPER 1
+
+#define DEGREES_TO_STEPS(x)  (3*x * STEPS_PER_STEP)
 #define NUM_STEPS (DEGREES_TO_STEPS(360))
 #define NUM_MOTORS (16)
 
-MotorVID28 motor1(NUM_STEPS, false, 9, 10, 11);
-MotorVID28 motor2(NUM_STEPS, false, 3, 2, 4);
-MotorVID28 motor3(NUM_STEPS, false, 6, 5, 7);
-MotorVID28 motor4(NUM_STEPS, false, 12, 13, 14);
-MotorVID28 motor5(NUM_STEPS, false, 15, 16, 17);
-MotorVID28 motor6(NUM_STEPS, false, 18, 19, 20);
-MotorVID28 motor7(NUM_STEPS, false, 21, 22, 23);
-MotorVID28 motor8(NUM_STEPS, false, 24, 25, 26);
-MotorVID28 motor9(NUM_STEPS, false, 27, 28, 29);
-MotorVID28 motor10(NUM_STEPS, false, 30, 31, 32);
-MotorVID28 motor11(NUM_STEPS, false, 33, 34, 35);
-MotorVID28 motor12(NUM_STEPS, false, 36, 37, 38);
-MotorVID28 motor13(NUM_STEPS, false, 39, 40, 41);
-MotorVID28 motor14(NUM_STEPS, false, 42, 43, 44);
-MotorVID28 motor15(NUM_STEPS, false, 45, 46, 47);
-MotorVID28 motor16(NUM_STEPS, false, 48, 49, 50);
+#define HAND_SPEED (500 * STEPS_PER_STEP)
+#define HAND_ACCELERATION (120 * STEPS_PER_STEP)
 
-void stepper1_fw() { motor1.stepUp(); }
-void stepper1_bw() { motor1.stepDown(); }
+MotorVID28 motor1(NUM_STEPS, microstepMode, 3, 2, 51);
+MotorVID28 motor2(NUM_STEPS, microstepMode, 6, 5, 7);
+// MotorVID28 motor1(NUM_STEPS, microstepMode, 3, 4, 2);
+// MotorVID28 motor2(NUM_STEPS, microstepMode, 6, 7, 5);
+// MotorVID28 motor1(NUM_STEPS, microstepMode, 55, 54, 56);
+// MotorVID28 motor2(NUM_STEPS, microstepMode, 58, 57, 59);
+MotorVID28 motor3(NUM_STEPS, microstepMode, 55, 54, 56);
+MotorVID28 motor4(NUM_STEPS, microstepMode, 58, 57, 59);
 
-void stepper2_fw() { motor2.stepUp(); }
-void stepper2_bw() { motor2.stepDown(); }
+// MotorVID28 motor1(NUM_STEPS, microstepMode, 33, 31, 35);
+// MotorVID28 motor2(NUM_STEPS, microstepMode, 39, 37, 41);
+MotorVID28 motor5(NUM_STEPS, microstepMode, 15, 16, 17);
+MotorVID28 motor6(NUM_STEPS, microstepMode, 18, 19, 20);
+MotorVID28 motor7(NUM_STEPS, microstepMode, 21, 22, 23);
+MotorVID28 motor8(NUM_STEPS, microstepMode, 24, 25, 26);
+MotorVID28 motor9(NUM_STEPS, microstepMode, 27, 28, 29);
+MotorVID28 motor10(NUM_STEPS, microstepMode, 30, 31, 32);
+MotorVID28 motor11(NUM_STEPS, microstepMode, 33, 34, 35);
+MotorVID28 motor12(NUM_STEPS, microstepMode, 36, 37, 38);
+MotorVID28 motor13(NUM_STEPS, microstepMode, 39, 40, 41);
+MotorVID28 motor14(NUM_STEPS, microstepMode, 42, 43, 44);
+MotorVID28 motor15(NUM_STEPS, microstepMode, 45, 46, 47);
+MotorVID28 motor16(NUM_STEPS, microstepMode, 48, 49, 50);
 
-void stepper3_fw() { motor3.stepUp(); }
-void stepper3_bw() { motor3.stepDown(); }
+#if USE_ACCELSTEPPER
+  void stepper1_fw() { motor1.stepUp(); }
+  void stepper1_bw() { motor1.stepDown(); }
 
-void stepper4_fw() { motor4.stepUp(); }
-void stepper4_bw() { motor4.stepDown(); }
+  void stepper2_fw() { motor2.stepUp(); }
+  void stepper2_bw() { motor2.stepDown(); }
 
-void stepper5_fw() { motor5.stepUp(); }
-void stepper5_bw() { motor5.stepDown(); }
+  void stepper3_fw() { motor3.stepUp(); }
+  void stepper3_bw() { motor3.stepDown(); }
 
-void stepper6_fw() { motor6.stepUp(); }
-void stepper6_bw() { motor6.stepDown(); }
+  void stepper4_fw() { motor4.stepUp(); }
+  void stepper4_bw() { motor4.stepDown(); }
 
-void stepper7_fw() { motor7.stepUp(); }
-void stepper7_bw() { motor7.stepDown(); }
+  void stepper5_fw() { motor5.stepUp(); }
+  void stepper5_bw() { motor5.stepDown(); }
 
-void stepper8_fw() { motor8.stepUp(); }
-void stepper8_bw() { motor8.stepDown(); }
+  void stepper6_fw() { motor6.stepUp(); }
+  void stepper6_bw() { motor6.stepDown(); }
+
+  void stepper7_fw() { motor7.stepUp(); }
+  void stepper7_bw() { motor7.stepDown(); }
+
+  void stepper8_fw() { motor8.stepUp(); }
+  void stepper8_bw() { motor8.stepDown(); }
 
 
-void stepper9_fw() { motor9.stepUp(); }
-void stepper9_bw() { motor9.stepDown(); }
+  void stepper9_fw() { motor9.stepUp(); }
+  void stepper9_bw() { motor9.stepDown(); }
 
-void stepper10_fw() { motor10.stepUp(); }
-void stepper10_bw() { motor10.stepDown(); }
+  void stepper10_fw() { motor10.stepUp(); }
+  void stepper10_bw() { motor10.stepDown(); }
 
-void stepper11_fw() { motor11.stepUp(); }
-void stepper11_bw() { motor11.stepDown(); }
+  void stepper11_fw() { motor11.stepUp(); }
+  void stepper11_bw() { motor11.stepDown(); }
 
-void stepper12_fw() { motor12.stepUp(); }
-void stepper12_bw() { motor12.stepDown(); }
+  void stepper12_fw() { motor12.stepUp(); }
+  void stepper12_bw() { motor12.stepDown(); }
 
-void stepper13_fw() { motor13.stepUp(); }
-void stepper13_bw() { motor13.stepDown(); }
+  void stepper13_fw() { motor13.stepUp(); }
+  void stepper13_bw() { motor13.stepDown(); }
 
-void stepper14_fw() { motor14.stepUp(); }
-void stepper14_bw() { motor14.stepDown(); }
+  void stepper14_fw() { motor14.stepUp(); }
+  void stepper14_bw() { motor14.stepDown(); }
 
-void stepper15_fw() { motor15.stepUp(); }
-void stepper15_bw() { motor15.stepDown(); }
+  void stepper15_fw() { motor15.stepUp(); }
+  void stepper15_bw() { motor15.stepDown(); }
 
-void stepper16_fw() { motor16.stepUp(); }
-void stepper16_bw() { motor16.stepDown(); }
+  void stepper16_fw() { motor16.stepUp(); }
+  void stepper16_bw() { motor16.stepDown(); }
 
-AccelStepper steppers[NUM_MOTORS] = {
-  AccelStepper(stepper1_fw, stepper1_bw),
-  AccelStepper(stepper2_fw, stepper2_bw),
-  AccelStepper(stepper3_fw, stepper3_bw),
-  AccelStepper(stepper4_fw, stepper4_bw),
-  AccelStepper(stepper5_fw, stepper5_bw),
-  AccelStepper(stepper6_fw, stepper6_bw),
-  AccelStepper(stepper7_fw, stepper7_bw),
-  AccelStepper(stepper8_fw, stepper8_bw),
-  AccelStepper(stepper9_fw, stepper9_bw),
-  AccelStepper(stepper10_fw, stepper10_bw),
-  AccelStepper(stepper11_fw, stepper11_bw),
-  AccelStepper(stepper12_fw, stepper12_bw),
-  AccelStepper(stepper13_fw, stepper13_bw),
-  AccelStepper(stepper14_fw, stepper14_bw),
-  AccelStepper(stepper15_fw, stepper15_bw),
-  AccelStepper(stepper16_fw, stepper16_bw)
-};
+  AccelStepper steppers[NUM_MOTORS] = {
+    AccelStepper(stepper1_bw, stepper1_fw),
+    AccelStepper(stepper2_bw, stepper2_fw),
+    AccelStepper(stepper3_bw, stepper3_fw),
+    AccelStepper(stepper4_bw, stepper4_fw),
+    AccelStepper(stepper5_bw, stepper5_fw),
+    AccelStepper(stepper6_bw, stepper6_fw),
+    AccelStepper(stepper7_bw, stepper7_fw),
+    AccelStepper(stepper8_bw, stepper8_fw),
+    AccelStepper(stepper9_bw, stepper9_fw),
+    AccelStepper(stepper10_bw, stepper10_fw),
+    AccelStepper(stepper11_bw, stepper11_fw),
+    AccelStepper(stepper12_bw, stepper12_fw),
+    AccelStepper(stepper13_bw, stepper13_fw),
+    AccelStepper(stepper14_bw, stepper14_fw),
+    AccelStepper(stepper15_bw, stepper15_fw),
+    AccelStepper(stepper16_bw, stepper16_fw)
+  };
+#else
+  MotorVID28 motors[NUM_MOTORS] = {motor1, motor2, motor3, motor4, motor5, motor6, motor7, motor8, motor9, motor10, motor11, motor12, motor13, motor14, motor15, motor16};
+  // MotorVID28 motors[NUM_MOTORS] = {motor1};
+#endif
 
 int16_t inputTargets[NUM_MOTORS*3+1]; //extra sync bytes at end
 bool new_targets = false;
@@ -109,11 +135,31 @@ void setup() {
   Serial.print(NUM_STEPS);
   Serial.println(".");
   */
-
+  #if USE_ACCELSTEPPER
   for(int i=0;i<NUM_MOTORS;i++) {
-    steppers[i].setMaxSpeed(500.0);
-    steppers[i].setAcceleration(120.0);
+    steppers[i].setMaxSpeed(HAND_SPEED);
+    steppers[i].setAcceleration(HAND_ACCELERATION);
   }
+  #else
+  for(int i=0;i<NUM_MOTORS;i++) {
+    motors[i].setMaxSpeed(HAND_SPEED/100);
+  }
+
+  #endif
+    uint8_t mode = 1;
+    
+    // TCCR0B = TCCR0B & 0b11111000 | mode;
+    TCCR1B = TCCR1B & 0b11111000 | mode;
+    TCCR2B = TCCR2B & 0b11111000 | mode;
+
+    TCCR3B = TCCR3B & 0b11111000 | mode;
+    TCCR4B = TCCR4B & 0b11111000 | mode;
+    TCCR5B = TCCR5B & 0b11111000 | mode;
+    
+    /*
+    setPrescaler(0, 1);
+    setPrescaler(1, 1);
+    setPrescaler(2, 1);*/
 
     // have to send on master in, *slave out*
   pinMode(MISO, OUTPUT);
@@ -130,16 +176,17 @@ void setup() {
 }
 
 
+#define I2C_NUM_MOTOR_POSITIONS 16
 // SPI interrupt routine
 ISR (SPI_STC_vect)
 {
   byte c = SPDR;  
   buf [pos++] = c;
   
-  if(pos == (NUM_MOTORS*2+2))
+  if(pos == (I2C_NUM_MOTOR_POSITIONS*2+2))
   {
       new_targets = true;
-      for(int i=0;i<NUM_MOTORS;i++) {
+      for(int i=0;i<I2C_NUM_MOTOR_POSITIONS;i++) {
         byte c1 = buf[i*2];
         byte c2 = buf[i*2+1];
 
@@ -153,26 +200,50 @@ ISR (SPI_STC_vect)
 
 void loop(void)
 {  
+  //delay(1);
+  #if USE_ACCELSTEPPER
   for(int i=0;i<NUM_MOTORS;i++) {
     steppers[i].run();
   }
+  #else
+
+  for(int i=0;i<NUM_MOTORS;i++) {
+    motors[i].update();
+  }
+
+
+  #endif
+
 
   if(new_targets) {
     Serial.println("new targets");
-    for(int i=0;i<NUM_MOTORS;i++) {
-      Serial.println(inputTargets[i]);
-      steppers[i].moveTo(DEGREES_TO_STEPS(inputTargets[i]));
+    for(int i=0;i<2;i++) {
+      int x = DEGREES_TO_STEPS(inputTargets[i]);
+      //x -= x % 24;
+      Serial.print(inputTargets[i]);
+      Serial.print("\t");
+      Serial.println(x);
+
+      #if USE_ACCELSTEPPER
+        steppers[i].moveTo(x);
+      #else
+        motors[i].setPosition(x);
+      #endif
     }
     Serial.println("\n");
     new_targets = false;
   }
 
-  /*
+  
   static int nextPos = 0;
   if (Serial.available()) {
     char c = Serial.read();
     if (c==10 || c==13) {
-      steppers[0].moveTo(nextPos);
+      #if USE_ACCELSTEPPER
+      steppers[1].moveTo(nextPos);
+      #else
+      motors[1].setPosition(nextPos);
+      #endif
       nextPos = 0;
     } else if (c>='0' && c<='9') {
       nextPos = 10*nextPos + (c-'0');
@@ -182,12 +253,12 @@ void loop(void)
       Serial.print(" - ");
       Serial.println(micros());
 
-      nextPos = steppers[0].currentPosition() + NUM_STEPS;
+      //nextPos = steppers[0].currentPosition() + NUM_STEPS;
 
       Serial.print(millis());
       Serial.print(" - ");
       Serial.println(micros());
     }
   }
-  */
+  
 }
