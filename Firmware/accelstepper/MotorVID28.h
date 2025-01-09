@@ -21,6 +21,8 @@
 
 #define MINIMUM_DELAY 500 //Minimum delay in microsecs.
 
+// #define MOTORVID28_NUM_MICROSTEPS 24
+#define MOTORVID28_NUM_MICROSTEPS 48
 class MotorVID28
 {
  public:
@@ -38,7 +40,7 @@ class MotorVID28
    void setZero() { currentStep = 0; };  //Used in conjuction with a magnet and a Hall sensor.
    void setMaxSpeed(unsigned int velocity) { minDelay = (velocity != 0) ? 1000000 / velocity : MINIMUM_DELAY ; } //velocity in ticks / second
 
- private:
+ //private:
    void advance();
    void writeIO();
 

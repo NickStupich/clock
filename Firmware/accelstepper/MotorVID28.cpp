@@ -45,6 +45,23 @@ static byte stateMap[] = {0x5, 0x1, 0x3, 0x2, 0x6, 0x4};
 
 static int accelTable[ACCELSTAGES];
 
+// static byte microStepState[] = {255, 255, 255, 255,
+//                                 255, 255, 0, 0,
+//                                 0, 0, 0, 0,
+//                                 0, 0, 0, 0,
+//                                 0, 0, 255, 255,
+//                                 255, 255, 255, 255};
+
+// static byte microStepState[] = {246, 246, 203, 203,
+//                                 144, 144, 79, 79,
+//                                 27, 27, 2, 2,
+//                                 10, 10, 51, 51,
+//                                111, 111, 175, 175,
+//                                 228, 228, 253, 253};
+
+
+#if MOTORVID28_NUM_MICROSTEPS == 24
+
 // Divdide each step in 4 microsteps makes 24 steps per cycle
 static byte microStepState[] = {251, 238, 218, 191,
                                 160, 128, 95, 64,
@@ -57,6 +74,23 @@ static byte microStepState[] = {251, 238, 218, 191,
 #define STARTINDEX_PIN23 10 // 23-13
 #define STARTINDEX_PIN4 2 // 23-21
 
+#else
+                                
+static byte microStepState[] = {254, 251, 245, 238, 229, 218, 205, 191,
+                                176, 160, 144, 128, 111, 95,  79,  64,
+                                50,  37,  26,  17,  10,  4,   1,   0,
+                                1,   4,   10,  17,  26,  37,  50,  64,
+                                79,  95,  111, 128, 144, 160, 176, 191,
+                                205, 218, 229, 238, 245, 251, 254, 255};
+
+                                
+
+#define STARTINDEX_PIN1 36 // 0 // 23-5
+#define STARTINDEX_PIN23 20 // 23-13
+#define STARTINDEX_PIN4 4 // 23-21
+
+#endif
+
 #define STEPTIME 2400  // Starting with 2400 microsecs between steps, gives
 #define FACTOR 0.95    // a minimum of 489 microsecs at step 31
 
@@ -65,7 +99,7 @@ MotorVID28::MotorVID28(unsigned int steps, boolean microstepmode, char pin1, uns
   this->currentState = 0;
   this->steps = steps;
   this->microstepmode = microstepmode;
-  this->stateCount = (microstepmode ? 24 : 6 );
+  this->stateCount = (microstepmode ? MOTORVID28_NUM_MICROSTEPS : 6 );
   this->pins[0] = pin1;
   this->pins[1] = pin2;
   this->pins[2] = pin3;

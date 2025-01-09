@@ -10,25 +10,30 @@
 char buf [100];
 volatile byte pos;
 
-#if 1
+#define USE_ACCELSTEPPER 1
+#define USE_MICROSTEPS 1
+
+#define MONITOR_PIN 12
+
+#if USE_MICROSTEPS
 bool microstepMode = true;
-#define STEPS_PER_STEP (4)
+#define STEPS_PER_STEP (MOTORVID28_NUM_MICROSTEPS / 6)
 #else
 bool microstepMode = false;
 #define STEPS_PER_STEP (1)
 #endif
 
-#define USE_ACCELSTEPPER 1
 
 #define DEGREES_TO_STEPS(x)  (3*x * STEPS_PER_STEP)
 #define NUM_STEPS (DEGREES_TO_STEPS(360))
-#define NUM_MOTORS (16)
+#define NUM_MOTORS (2)
 
-#define HAND_SPEED (500 * STEPS_PER_STEP)
-#define HAND_ACCELERATION (120 * STEPS_PER_STEP)
+#define HAND_SPEED (2.0 * STEPS_PER_STEP)
+#define HAND_ACCELERATION (0.03 * STEPS_PER_STEP)
 
-MotorVID28 motor1(NUM_STEPS, microstepMode, 3, 2, 51);
-MotorVID28 motor2(NUM_STEPS, microstepMode, 6, 5, 7);
+MotorVID28 motor1(NUM_STEPS, microstepMode, 5, 3, 6);
+MotorVID28 motor2(NUM_STEPS, microstepMode, 10, 9, 11);
+/*
 // MotorVID28 motor1(NUM_STEPS, microstepMode, 3, 4, 2);
 // MotorVID28 motor2(NUM_STEPS, microstepMode, 6, 7, 5);
 // MotorVID28 motor1(NUM_STEPS, microstepMode, 55, 54, 56);
@@ -49,15 +54,19 @@ MotorVID28 motor12(NUM_STEPS, microstepMode, 36, 37, 38);
 MotorVID28 motor13(NUM_STEPS, microstepMode, 39, 40, 41);
 MotorVID28 motor14(NUM_STEPS, microstepMode, 42, 43, 44);
 MotorVID28 motor15(NUM_STEPS, microstepMode, 45, 46, 47);
-MotorVID28 motor16(NUM_STEPS, microstepMode, 48, 49, 50);
+MotorVID28 motor16(NUM_STEPS, microstepMode, 48, 49, 50);*/
 
 #if USE_ACCELSTEPPER
-  void stepper1_fw() { motor1.stepUp(); }
-  void stepper1_bw() { motor1.stepDown(); }
+  void stepper1_fw() { motor1.stepUp(); 
+  digitalWrite(MONITOR_PIN, motor1.currentStep & 0x1); 
+  }
+  void stepper1_bw() { motor1.stepDown(); 
+  digitalWrite(MONITOR_PIN, motor1.currentStep & 0x1);
+  }
 
   void stepper2_fw() { motor2.stepUp(); }
   void stepper2_bw() { motor2.stepDown(); }
-
+/*
   void stepper3_fw() { motor3.stepUp(); }
   void stepper3_bw() { motor3.stepDown(); }
 
@@ -99,11 +108,11 @@ MotorVID28 motor16(NUM_STEPS, microstepMode, 48, 49, 50);
   void stepper15_bw() { motor15.stepDown(); }
 
   void stepper16_fw() { motor16.stepUp(); }
-  void stepper16_bw() { motor16.stepDown(); }
+  void stepper16_bw() { motor16.stepDown(); }*/
 
   AccelStepper steppers[NUM_MOTORS] = {
     AccelStepper(stepper1_bw, stepper1_fw),
-    AccelStepper(stepper2_bw, stepper2_fw),
+    AccelStepper(stepper2_bw, stepper2_fw),/*
     AccelStepper(stepper3_bw, stepper3_fw),
     AccelStepper(stepper4_bw, stepper4_fw),
     AccelStepper(stepper5_bw, stepper5_fw),
@@ -117,7 +126,7 @@ MotorVID28 motor16(NUM_STEPS, microstepMode, 48, 49, 50);
     AccelStepper(stepper13_bw, stepper13_fw),
     AccelStepper(stepper14_bw, stepper14_fw),
     AccelStepper(stepper15_bw, stepper15_fw),
-    AccelStepper(stepper16_bw, stepper16_fw)
+    AccelStepper(stepper16_bw, stepper16_fw)*/
   };
 #else
   MotorVID28 motors[NUM_MOTORS] = {motor1, motor2, motor3, motor4, motor5, motor6, motor7, motor8, motor9, motor10, motor11, motor12, motor13, motor14, motor15, motor16};
@@ -130,6 +139,7 @@ bool new_targets = false;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
+  Serial.println("Hello from nano");
   /*
   Serial.print("__Enter a step position from 0 through ");
   Serial.print(NUM_STEPS);
@@ -148,19 +158,22 @@ void setup() {
   #endif
     uint8_t mode = 1;
     
-    // TCCR0B = TCCR0B & 0b11111000 | mode;
+//#if USE_MICROSTEPS
+    /*
+    TCCR0B = TCCR0B & 0b11111000 | mode;
     TCCR1B = TCCR1B & 0b11111000 | mode;
     TCCR2B = TCCR2B & 0b11111000 | mode;
 
     TCCR3B = TCCR3B & 0b11111000 | mode;
     TCCR4B = TCCR4B & 0b11111000 | mode;
     TCCR5B = TCCR5B & 0b11111000 | mode;
-    
-    /*
-    setPrescaler(0, 1);
-    setPrescaler(1, 1);
-    setPrescaler(2, 1);*/
-
+    */
+    int divisor = 1;
+    setPrescaler(0, divisor);
+    setPrescaler(1, divisor);
+    setPrescaler(2, divisor);
+  //#endif
+/*
     // have to send on master in, *slave out*
   pinMode(MISO, OUTPUT);
   
@@ -173,6 +186,17 @@ void setup() {
   pos = 0;
 
   SPI.attachInterrupt();
+
+  */
+      pinMode(MONITOR_PIN, OUTPUT);
+      // steppers[1].moveTo(2200);
+      //  steppers[0].moveTo(DEGREES_TO_STEPS(360));
+      // steppers[1].moveTo(DEGREES_TO_STEPS(3600));
+      steppers[1].moveTo(DEGREES_TO_STEPS(360));
+  
+    // for(int i=0;i<NUM_MOTORS;i++) {
+    //   steppers[i].moveTo(DEGREES_TO_STEPS(360));
+    // }
 }
 
 
@@ -200,7 +224,8 @@ ISR (SPI_STC_vect)
 
 void loop(void)
 {  
-  //delay(1);
+  delay(1);
+  
   #if USE_ACCELSTEPPER
   for(int i=0;i<NUM_MOTORS;i++) {
     steppers[i].run();

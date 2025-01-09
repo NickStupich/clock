@@ -16,7 +16,7 @@ volatile byte pos;
 #define HAND_SPEED (500 * STEPS_PER_STEP)
 #define HAND_ACCELERATION (125 * STEPS_PER_STEP)
 
-int frequencyTestPin = 21;
+int frequencyTestPin = 13;
 
 //int pin0 = 6, pin1 = 5, pin2= 7;
 //int motor1State = 0;
@@ -50,7 +50,7 @@ typedef struct  {
 
 Motor motors[NUM_MOTORS] = {
   {3,2,4},  {6,5,7}, 
-  {9,8,10},  {12,11,13}, 
+  {9,8,10},  {12,11,133}, 
   {55,54,56},  {58,57,59}, 
   {63,62,64},  {66,65,67}, 
   {31,33,29},  {25,27,23}, 
@@ -67,6 +67,13 @@ static byte microStepState[] = {0xff, 0xe, 0xd, 0xb,
                                 0x0, 0x1, 0x2, 0x4,
                                 0x5, 0x8, 0xa, 0xb,
                                 0xd, 0xe, 0xff, 0xff};
+
+// static byte microStepState[] = {0xff, 0xfe, 0xfe, 0xee,    //8,7,7,6
+//                                 0xad, 0xaa, 0xa4, 0x44,    //5,4,3,2
+//                                 0x08, 0x08, 0x00, 0x00,    //1,1,0,0
+//                                 0x00, 0x08, 0x08, 0x44,    //0,1,1,2
+//                                 0xa4, 0xaa, 0xad, 0xee,    //3,4,5,6
+//                                 0xfe, 0xfe, 0xff, 0xff};  //7,7,8,8
 
 #define HIGH_CONSTANT (0xff)
 // static byte microStepState[] = {HIGH_CONSTANT, HIGH_CONSTANT, HIGH_CONSTANT, HIGH_CONSTANT,
@@ -180,11 +187,12 @@ void setup() {
     }
     
     // steppers[0].moveTo(2222);
-    steppers[1].moveTo(2400);
+    // steppers[1].moveTo(2400);
 
-    // for(int i=0;i<NUM_MOTORS;i++) {
-    //   steppers[i].moveTo(2000 + 200 * i);
-    // }
+    for(int i=0;i<NUM_MOTORS;i++) {
+      steppers[i].moveTo(2000 + 200 * i);
+    }
+    
 }
 
 uint8_t PWM_MASK = 0xf;
@@ -202,35 +210,39 @@ void loop() {
       steppers[i].run();
       // Serial.println(motors[i].pin0PWM);
     }
-   }
-   */
+   }*/
+   
    uint8_t stepperCount = loopCount & 0x5;
    steppers[stepperCount << 1].run();
    steppers[(stepperCount << 1) + 1].run();
 
   for(int i=0;i<NUM_MOTORS;i++) {
-    // digitalWrite(motors[i].pin0, pwmCount >= motors[i].pin0PWM);
-    // digitalWrite(motors[i].pin1, pwmCount >= motors[i].pin1PWM);
-    // digitalWrite(motors[i].pin2, pwmCount >= motors[i].pin2PWM);
+    digitalWrite(motors[i].pin0, pwmCount >= motors[i].pin0PWM);
+    digitalWrite(motors[i].pin1, pwmCount >= motors[i].pin1PWM);
+    digitalWrite(motors[i].pin2, pwmCount >= motors[i].pin2PWM);
 
     
-    if (pwmCount >= motors[i].pin0PWM) {
-      *motors[i].out0 |= motors[i].bit0;
-    } else {
-      *motors[i].out0 &= ~motors[i].bit0;
-    }
+    // if (pwmCount >= motors[i].pin0PWM) {
+    // // if(pwmCount & motors[i].pin0PWM) {
+    //   *motors[i].out0 |= motors[i].bit0;
+    // } else {
+    //   *motors[i].out0 &= ~motors[i].bit0;
+    // }
     
-    if (pwmCount >= motors[i].pin1PWM) {
-      *motors[i].out1 |= motors[i].bit1;
-    } else {
-      *motors[i].out1 &= ~motors[i].bit1;
-    }
+    // if (pwmCount >= motors[i].pin1PWM) {
+    // // if(pwmCount & motors[i].pin1PWM) {
+    //   *motors[i].out1 |= motors[i].bit1;
+    // } else {
+    //   *motors[i].out1 &= ~motors[i].bit1;
+    // }
     
-    if (pwmCount >= motors[i].pin2PWM) {
-      *motors[i].out2 |= motors[i].bit2;
-    } else {
-      *motors[i].out2 &= ~motors[i].bit2;
-    }
+    // if (pwmCount >= motors[i].pin2PWM) {
+    // // if(pwmCount & motors[i].pin2PWM) {
+    //   *motors[i].out2 |= motors[i].bit2;
+    // } else {
+    //   *motors[i].out2 &= ~motors[i].bit2;
+    // }
+    
   }
 
   loopCount++;
