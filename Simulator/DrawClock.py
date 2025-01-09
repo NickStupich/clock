@@ -3,9 +3,6 @@ import numpy as np
 from bokeh.plotting import figure, show
 from bokeh.models import AnnularWedge, ColumnDataSource, Grid, LinearAxis, Plot, Rect, Circle, Range1d
 
-from bokeh.io import export_svgs, export_png
-import svglib.svglib as svglib
-from reportlab.graphics import renderPDF
 
 n_rows = 3
 n_cols = 8
@@ -46,10 +43,10 @@ else:
     plot_width = n_cols * distance_between_clocks + 2 * horizontal_border_padding
     plot_height = n_rows * distance_between_clocks + 2 * vertical_border_padding
 
-    print(horizontal_border_padding, vertical_border_padding)
-    print(plot_height, plot_width, frame_height, frame_width)
+    #print(horizontal_border_padding, vertical_border_padding)
+    #print(plot_height, plot_width, frame_height, frame_width)
 
-    if 1:
+    if 0: #for drawing template
         scale = 10
         horizontal_border_padding *= scale
         vertical_border_padding *= scale
@@ -63,6 +60,9 @@ else:
 
 
 def create_pdf():
+    from bokeh.io import export_png
+    import svglib.svglib as svglib
+    from reportlab.graphics import renderPDF
     from selenium import webdriver
     driver = webdriver.Firefox()
     plot = create_plot()
