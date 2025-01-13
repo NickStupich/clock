@@ -7,14 +7,11 @@
 
 #include "pins_arduino.h"
 
-char buf [100];
-volatile byte pos;
-
 #define USE_MICROSTEPS 1
 #define MONITOR_PIN 12
 
-#define MOTOR_ROW 0
-#define MOTOR_COL 0
+#define MOTOR_ROW 2
+#define MOTOR_COL 5
 
 #if USE_MICROSTEPS
 bool microstepMode = true;
@@ -55,8 +52,12 @@ bool new_targets = false;
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(9600);
-  Serial.println("Hello from nano");
+  Serial.begin(115200);
+  Serial.print("Nano started for motor [");
+  Serial.print(MOTOR_ROW);
+  Serial.print(" , ");
+  Serial.print(MOTOR_COL);
+  Serial.println("]");
 
   stepper0.setMaxSpeed(HAND_SPEED);
   stepper0.setAcceleration(HAND_ACCELERATION);
@@ -72,6 +73,8 @@ void setup() {
   pinMode(MONITOR_PIN, OUTPUT);
   // stepper0.moveTo(DEGREES_TO_STEPS(360));
   // stepper1.moveTo(DEGREES_TO_STEPS(-360));
+  stepper0.moveTo(0);
+  stepper1.moveTo(0);
 
   Wire.begin(2);                // join i2c bus with address 
   Wire.onReceive(i2cReceiveEvent);  
@@ -81,20 +84,21 @@ uint8_t i2cReceiveBuffer[96];
 void i2cReceiveEvent(int howMany)
 {
   if(howMany == 25) {
-    //Serial.println(howMany);
-    // Serial.println(Wire.read());
     int index = Wire.read();
     Serial.println(index);
     int size = Wire.readBytes(&i2cReceiveBuffer[index*24], 24);
     if(index == 3)
     {
+      /*
       Serial.println("Full update");
 
-      // for(int i=0;i<96;i++) {
-        // Serial.println(i2cReceiveBuffer[i]);
-      // }
+      for(int i=0;i<96;i++) {
+        Serial.print(i);
+        Serial.print("\t");
+        Serial.println(i2cReceiveBuffer[i]);
+      }
+      */
 
-      //TODO: check this
       int16_t *i2cProcessPtr = (int16_t*)(&i2cReceiveBuffer[(MOTOR_ROW * 8 + MOTOR_COL) * 4]);
       int x0 = i2cProcessPtr[0];
       int x1 = i2cProcessPtr[1];
@@ -116,49 +120,10 @@ void i2cReceiveEvent(int howMany)
   }
 }
 
-// #define I2C_NUM_MOTOR_POSITIONS 16
-// // SPI interrupt routine
-// ISR (SPI_STC_vect)
-// {
-//   byte c = SPDR;  
-//   buf [pos++] = c;
-  
-//   if(pos == (I2C_NUM_MOTOR_POSITIONS*2+2))
-//   {
-//       new_targets = true;
-//       for(int i=0;i<I2C_NUM_MOTOR_POSITIONS;i++) {
-//         byte c1 = buf[i*2];
-//         byte c2 = buf[i*2+1];
-
-//         int16_t c = (c1<<8) + c2;
-//         inputTargets[i] = c;
-//       }
-//       pos = 0;
-//   }
-  
-// }
-
 void loop(void)
 {  
-  delay(1);
+  //delay(1);
   
   stepper0.run();
   stepper1.run();
-
-  if(new_targets) {
-    Serial.println("new targets");
-    for(int i=0;i<2;i++) {
-      int x = DEGREES_TO_STEPS(inputTargets[i]);
-      //x -= x % 24;
-      Serial.print(inputTargets[i]);
-      Serial.print("\t");
-      Serial.println(x);
-
-      stepper0.moveTo(x);
-      stepper0.moveTo(1);
-    }
-    Serial.println("\n");
-    new_targets = false;
-  }
-  
 }

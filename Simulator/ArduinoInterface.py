@@ -30,7 +30,7 @@ else:
 		def transmitTargetPositions(self, target_angles):
 			#print(target_angles.astype('int16'), target_angles.shape)
 
-			to_send = list(np.ascontiguousarray(target_angles - 270, dtype='<i2').tobytes())
+			to_send = list(np.ascontiguousarray(target_angles, dtype='<i2').tobytes())
 			#print(to_send)
 
 			try:

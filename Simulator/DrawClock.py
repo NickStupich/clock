@@ -135,7 +135,8 @@ def create_pdf():
 
 
 #colors - black and rose gold
-hand_color = "#d08050"
+back_hand_color = "#c07040"
+front_hand_color = "#e09060"
 background_color = "#111111"
 individual_recess_line_color = "#333333"
 individual_recess_fill_color = "#222222"
@@ -157,13 +158,13 @@ def draw_full_clock_by_source(plot, source):
     glyph = Circle(x='centers_x', y='centers_y', radius=clock_radius, line_color=individual_recess_line_color, fill_color=individual_recess_fill_color, line_width=1)
     plot.add_glyph(source, glyph)
 
-    glyph = Rect(x='hour_rect_centers_x', y='hour_rect_centers_y', width=hand_length, height=hand_width, angle='hour_angles', fill_color=hand_color)
+    glyph = Rect(x='hour_rect_centers_x', y='hour_rect_centers_y', width=hand_length, height=hand_width, angle='hour_angles', fill_color=back_hand_color)
     plot.add_glyph(source, glyph)
 
-    glyph = Rect(x='minute_rect_centers_x', y='minute_rect_centers_y', width=hand_length, height=hand_width, angle='minute_angles', fill_color=hand_color)
+    glyph = Rect(x='minute_rect_centers_x', y='minute_rect_centers_y', width=hand_length, height=hand_width, angle='minute_angles', fill_color=front_hand_color)
     plot.add_glyph(source, glyph)
 
-    glyph = Circle(x='centers_x', y='centers_y', radius=hand_width/2, fill_color=hand_color, line_width=1)
+    glyph = Circle(x='centers_x', y='centers_y', radius=hand_width/2, fill_color=front_hand_color)
     plot.add_glyph(source, glyph)
 
 
@@ -177,7 +178,7 @@ def create_plot():
 
 
 def angles_to_source_dict(angles):
-    flat_angles = angles.reshape((-1, 2)) * np.pi / 180
+    flat_angles = (angles - 90).reshape((-1, 2)) * np.pi / 180
     centers = np.array([
             (horizontal_border_padding + (col + 0.5) * distance_between_clocks, vertical_border_padding + (row + 0.5) * distance_between_clocks) 
         for row in range(n_rows)[::-1] #drawn bottom to top
