@@ -30,8 +30,6 @@ class TestMotorsAlgorithm(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 			col = motorToMove // target_hand_angles.shape[1]
 			row = motorToMove % target_hand_angles.shape[1]
 
-			print(col, row, target_hand_angles.shape)
-
 			target_hand_angles[col,row,0] = target_hand_angles[col,row,0] + 360 + 90
 			target_hand_angles[col,row,1] = target_hand_angles[col,row,1] - 360 + 90
 

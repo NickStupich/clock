@@ -118,6 +118,7 @@ class ClockHandController(object):
 
 
     def enableAlgo(self, algoName):
+        self.currentAlgorithmName = algoName
         self.currentAlgorithm = self.algorithms_dict[algoName]
         self.currentAlgorithm.select()
         self.last_update_time = (0,0,0) #triggers an update right away
