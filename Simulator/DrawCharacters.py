@@ -230,6 +230,22 @@ def draw_letter(c, angles):
         angles[2,1,0] = 270
         angles[2,1,1] = 270
 
+    elif c == ' ':
+        angles[0,0,0] = 315
+        angles[0,0,1] = 315
+        angles[0,1,0] = 315
+        angles[0,1,1] = 315
+
+        angles[1,0,0] = 315
+        angles[1,0,1] = 315
+        angles[1,1,0] = 315
+        angles[1,1,1] = 315
+
+        angles[2,0,0] = 315
+        angles[2,0,1] = 315
+        angles[2,1,0] = 315
+        angles[2,1,1] = 315
+
 
     elif c == 'k':
         angles[0,0,0] = 0
@@ -247,4 +263,21 @@ def draw_letter(c, angles):
         angles[2,1,0] = 225
         angles[2,1,1] = 225
 
+    elif c == 'o':
+        angles[0,0,0] = 90
+        angles[0,0,1] = 0
+        angles[0,1,0] = 270
+        angles[0,1,1] = 0
 
+        angles[1,0,0] = 180
+        angles[1,0,1] = 0
+        angles[1,1,0] = 180
+        angles[1,1,1] = 0
+
+        angles[2,0,0] = 180
+        angles[2,0,1] = 90
+        angles[2,1,0] = 270
+        angles[2,1,1] = 180
+
+    else:
+        raise NotImplementedError('letter: ', c)

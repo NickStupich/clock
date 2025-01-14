@@ -4,22 +4,15 @@ import numpy as np
 import datetime
 
 import DrawClock
-import DrawCharacters
 import ArduinoInterface
 
 ACCELERATION = 1
 MAX_VELOCITY = 10.0
 
-
-animation_counter = 0
-def add_transition_animation(angles):
-    global animation_counter
-    
-    if animation_counter % 2 == 0:
-        angles[:, :, 0] += 360
-        angles[:, :, 1] -= 360
-
-    animation_counter+=1
+import OffDisplayAlgorithm
+import TimeDisplayAlgorithm
+import TextDisplayAlgorithm
+import TestMotorsAlgorithm
 
 
 def update_real_hand_angles_from_targets(actual_hand_angles, target_hand_angles, hand_velocities):
@@ -45,6 +38,7 @@ def update_real_hand_angles_from_targets(actual_hand_angles, target_hand_angles,
     hand_velocities[stop_indices] = 0
     
     actual_hand_angles[:,:,:] = new_hand_angles[:,:,:]
+
 
 
 class ClockHandController(object):
@@ -74,58 +68,47 @@ class ClockHandController(object):
         self.drawPositionThread.start()
 
 
+        self.algorithms_dict = { 'Off' : OffDisplayAlgorithm.OffDisplayAlgorithm(),
+                            'Time' : TimeDisplayAlgorithm.TimeDisplayAlgorithm(),
+                            'Text' : TextDisplayAlgorithm.TextDisplayAlgorithm(),
+                            'MotorTest' : TestMotorsAlgorithm.TestMotorsAlgorithm(),
+                            }
 
-    def modify_hand_angles_current_time(self, hand_angles):
+        self.currentAlgorithmName = 'Off'                    
+        self.currentAlgorithm = self.algorithms_dict[self.currentAlgorithmName]
+        self.last_update_time = (0,0,0)
 
-        if self.clock_enabled:
-            cur_time = datetime.datetime.now()
-            hour = cur_time.hour
-            minute = cur_time.minute
 
-            hour1 = hour // 10
-            hour2 = hour % 10
+    def algorithmNames(self):
+        return list(self.algorithms_dict.keys())
 
-            minute1 = minute // 10
-            minute2 = minute % 10
-        else:
-            hour1 = hour2 = minute1 = minute2 = -1
-
-        new_target = (hour1, hour2, minute1, minute2)
-
-        if new_target != self.last_target:
-            DrawCharacters.draw_digit(hour1, hand_angles[:, 0:2])
-            DrawCharacters.draw_digit(hour2, hand_angles[:, 2:4])
-            DrawCharacters.draw_digit(minute1, hand_angles[:, 4:6])
-            DrawCharacters.draw_digit(minute2, hand_angles[:, 6:8])
-
-            if self.clock_enabled: add_transition_animation(hand_angles)
-            self.last_target = new_target
-
-            return True
-
-        if 0:
-            DrawCharacters.draw_letter('f', hand_angles[:, 0:2])
-            DrawCharacters.draw_letter('u', hand_angles[:, 2:4])
-            DrawCharacters.draw_letter('c', hand_angles[:, 4:6])
-            DrawCharacters.draw_letter('k', hand_angles[:, 6:8])
-
-        return False
 
     def getDrawPositions(self):
         return self.actual_hand_angles
+
 
     def stop(self):
         self.stop_threads_flag = True
         self.targetPositionThread.join()
         self.drawPositionThread.join()
 
+
     def updateTargetPositionsThreadFunc(self):
-
         while not self.stop_threads_flag:
-            time.sleep(0.5)
+            time.sleep(0.2)
 
-            if(self.modify_hand_angles_current_time(self.target_hand_angles)):
-                self.arduinoInterface.transmitTargetPositions(self.target_hand_angles)
+            cur_time = datetime.datetime.now()
+            hour = cur_time.hour
+            minute = cur_time.minute
+            second = cur_time.second
+
+            current_time_tuple = (hour, minute, second)
+
+            if current_time_tuple != self.last_update_time:
+                if self.currentAlgorithm.updateHandPositions(hour, minute, second, self.target_hand_angles):                       
+                    self.arduinoInterface.transmitTargetPositions(self.target_hand_angles)
+
+                self.last_update_time = current_time_tuple
 
 
     def updateDrawPositionsThreadFunc(self):
@@ -134,7 +117,7 @@ class ClockHandController(object):
             update_real_hand_angles_from_targets(self.actual_hand_angles, self.target_hand_angles, self.hand_velocities)
 
 
-    def toggleClockEnabledState(self):
-        self.clock_enabled = not self.clock_enabled
-        self.arduinoInterface.setEnabledState(self.clock_enabled)
-        if self.bokehApp: self.bokehApp.setEnabledState(self.clock_enabled)
+    def enableAlgo(self, algoName):
+        self.currentAlgorithm = self.algorithms_dict[algoName]
+        self.currentAlgorithm.select()
+        self.last_update_time = (0,0,0) #triggers an update right away

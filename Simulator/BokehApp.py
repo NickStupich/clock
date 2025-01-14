@@ -3,7 +3,7 @@ from bokeh.server.server import Server
 from bokeh.application import Application
 from bokeh.application.handlers.function import FunctionHandler
 from bokeh.plotting import figure, ColumnDataSource, curdoc
-from bokeh.models import Plot, Range1d, Button, Checkbox, CustomJS
+from bokeh.models import Plot, Range1d, Select
 from bokeh.layouts import row,column
 
 from tornado.ioloop import IOLoop
@@ -36,12 +36,8 @@ class BokehApp():
             server.stop()
             raise e
 
-    def enableButton_click(self, event):
-        self.chc.toggleClockEnabledState()
-
-
-    def setEnabledState(self, enabled):
-        self.enableButton.button_type = 'success' if enabled else 'danger'
+    def algoDropDownChange(self, attr, oldValue, newValue):
+        self.chc.enableAlgo(newValue)
 
 
     def make_document(self, doc):
@@ -50,14 +46,18 @@ class BokehApp():
         plot = DrawClock.create_plot()
         DrawClock.draw_full_clock_by_source(plot, source)
 
-        self.enableButton = Button(label='Enable/Disable', button_type='success' if self.chc.clock_enabled else 'danger')
-        self.enableButton.on_click(self.enableButton_click)
+        # self.enableButton = Button(label='Enable/Disable', button_type='success' if self.chc.clock_enabled else 'danger')
+        # self.enableButton.on_click(self.enableButton_click)
+
+        algoMenu = self.chc.algorithmNames()
+        self.algorithmSelector = Select(title='Display type: ', value=self.chc.currentAlgorithmName, options=algoMenu)
+        self.algorithmSelector.on_change('value', self.algoDropDownChange)
 
         def update():
             new_data_dict = DrawClock.angles_to_source_dict(self.chc.getDrawPositions())
             source.data = new_data_dict
 
-        doc.add_root(column(plot, self.enableButton))
+        doc.add_root(column(plot, self.algorithmSelector))
         doc.add_periodic_callback(update, 50)
         
 
