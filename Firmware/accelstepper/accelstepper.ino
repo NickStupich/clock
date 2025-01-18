@@ -15,29 +15,34 @@
 
 #if USE_MICROSTEPS
 bool microstepMode = true;
-#define STEPS_PER_STEP (MOTORVID28_NUM_MICROSTEPS / 6)
+#define STEPS_PER_STEP ((long)(MOTORVID28_NUM_MICROSTEPS / 6))
 #else
 bool microstepMode = false;
-#define STEPS_PER_STEP (1)
+#define STEPS_PER_STEP (1L)
 #endif
 
+#define TIMER_ADJUSTMENT_FACTOR 64.0
 
-#define DEGREES_TO_STEPS(x)  (3*x * STEPS_PER_STEP)
+#define DEGREES_TO_STEPS(x)  (3L*x * STEPS_PER_STEP)
 #define NUM_STEPS (DEGREES_TO_STEPS(360))
 
-#define HAND_SPEED (2.0 * STEPS_PER_STEP)
-#define HAND_ACCELERATION (0.03 * STEPS_PER_STEP)
+// #define HAND_SPEED (2.0 * STEPS_PER_STEP)
+#define HAND_SPEED (DEGREES_TO_STEPS(360) / 8.0 / TIMER_ADJUSTMENT_FACTOR)
+// #define HAND_SPEED (128 * STEPS_PER_STEP) #without timer adjustment
+// #define HAND_ACCELERATION (0.03 * STEPS_PER_STEP)
+// #define HAND_ACCELERATION (122 * STEPS_PER_STEP)
+#define HAND_ACCELERATION (DEGREES_TO_STEPS(45) / (TIMER_ADJUSTMENT_FACTOR * TIMER_ADJUSTMENT_FACTOR))
 
 MotorVID28 motor0(NUM_STEPS, microstepMode, 5, 3, 6);
 MotorVID28 motor1(NUM_STEPS, microstepMode, 10, 9, 11);
 
 void stepper0_fw() { 
   motor0.stepUp(); 
-  digitalWrite(MONITOR_PIN, motor0.currentStep & 0x1); 
+  //digitalWrite(MONITOR_PIN, motor0.currentStep & 0x1); 
 }
 void stepper0_bw() { 
   motor0.stepDown(); 
-  digitalWrite(MONITOR_PIN, motor1.currentStep & 0x1);
+  //digitalWrite(MONITOR_PIN, motor1.currentStep & 0x1);
 }
 
 void stepper1_fw() { motor1.stepUp(); }
@@ -65,16 +70,24 @@ void setup() {
   stepper1.setMaxSpeed(HAND_SPEED);
   stepper1.setAcceleration(HAND_ACCELERATION);
   
+  // Serial.println(TCCR0B, HEX);
+  // Serial.println(TCCR1B, HEX);
+  // Serial.println(TCCR2B, HEX);
+
   int divisor = 1;
   setPrescaler(0, divisor);
   setPrescaler(1, divisor);
   setPrescaler(2, divisor);
+  
+  // Serial.println(TCCR0B, HEX);
+  // Serial.println(TCCR1B, HEX);
+  // Serial.println(TCCR2B, HEX);
 
-  pinMode(MONITOR_PIN, OUTPUT);
-  // stepper0.moveTo(DEGREES_TO_STEPS(360));
-  // stepper1.moveTo(DEGREES_TO_STEPS(-360));
-  stepper0.moveTo(0);
-  stepper1.moveTo(0);
+  //pinMode(MONITOR_PIN, OUTPUT);
+  stepper0.moveTo(DEGREES_TO_STEPS(-360));
+  stepper1.moveTo(DEGREES_TO_STEPS(360));
+  //stepper0.moveTo(0);
+  //stepper1.moveTo(0);
 
   Wire.begin(2);                // join i2c bus with address 
   Wire.onReceive(i2cReceiveEvent);  
@@ -120,10 +133,28 @@ void i2cReceiveEvent(int howMany)
   }
 }
 
+// long start_time = -1;
+// long end_time = -1;
 void loop(void)
 {  
   //delay(1);
   
-  stepper0.run();
-  stepper1.run();
+  bool running0 = stepper0.run();
+  bool running1 = stepper1.run();
+  /*
+  // Serial.println(stopped1);
+
+  if(running1 && start_time < 0) {
+    start_time = millis();
+  }
+  else if(!running1 && end_time < 0) {
+    end_time = millis();
+  }
+  else if(start_time >= 0 && end_time >= 0) {
+    long circleTime = end_time - start_time;
+    Serial.println(circleTime/64);
+    start_time = -1;
+    end_time = -1;
+  }
+  */
 }

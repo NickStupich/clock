@@ -2,21 +2,15 @@ import BaseDisplayAlgorithm
 import DrawCharacters
 
 
-animation_counter = 0
-def add_transition_animation(angles):
-    global animation_counter
-    
-    if animation_counter % 2 == 0:
-        angles[:, :, 0] += 360
-        angles[:, :, 1] -= 360
-
-    animation_counter+=1
-
-
 class TimeDisplayAlgorithm(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 	def __init__(self):
 		self.last_h = -1
 		self.last_m = -1
+		self.animation_counter = 0
+
+	def select(self):
+		self.animation_counter = 0
+
 
 	def updateHandPositions(self, h, m, s, target_hand_angles):
 
@@ -32,7 +26,7 @@ class TimeDisplayAlgorithm(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 			DrawCharacters.draw_digit(minute1, target_hand_angles[:, 4:6])
 			DrawCharacters.draw_digit(minute2, target_hand_angles[:, 6:8])
 
-			add_transition_animation(target_hand_angles)
+			self.add_transition_animation(target_hand_angles)
 
 			self.last_h = h
 			self.last_m = m
@@ -41,3 +35,11 @@ class TimeDisplayAlgorithm(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 
 		else:
 			return False
+
+
+	def add_transition_animation(self, angles):
+	    if self.animation_counter % 2 == 0:
+	        angles[:, :, 0] += 360
+	        angles[:, :, 1] -= 360
+
+	    self.animation_counter+=1
