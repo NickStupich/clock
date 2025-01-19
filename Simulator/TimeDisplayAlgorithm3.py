@@ -13,6 +13,7 @@ class TimeDisplayAlgorithm3(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 
 		self.next_target = np.zeros_like(DrawClock.clock_positions_base)
 
+
 	def select(self):
 		self.animation_counter = 0
 		self.first_time = True
@@ -33,26 +34,28 @@ class TimeDisplayAlgorithm3(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 			DrawCharacters.draw_digit(minute1, self.next_target[:, 4:6])
 			DrawCharacters.draw_digit(minute2, self.next_target[:, 6:8])
 
-			self.next_target[:,:,:] -= 360 * ((self.animation_counter % 2) - 1)
 			self.animation_counter += 1
+			self.next_target[:,:,:] += 360 * self.animation_counter
 
 			self.last_h = h
 			self.last_m = m
 
+			x = np.where(self.next_target < (target_hand_angles + 360))
+			self.next_target[x] += 360
+
+			hand_move_offsets = np.ones_like(self.next_target) * 360000
+			hand_move_offsets[:,:,1] += 180
+
+			self.distances_seconds = (8 - (np.abs(target_hand_angles - hand_move_offsets) / 45 )) % 8
+		
 		if self.first_time: #go straight there right away
 			target_hand_angles[:,:] = self.next_target[:,:]
 			self.first_time = False
 			return True
 
-		#TODO: actually need to move when hands are 180 apart, which depends on their previous position
-		# and maybe also pick the hand to move first based on which one has farther to move?
-		elif s == 0:
-			target_hand_angles[:, :, 0] = self.next_target[:, :, 0]
+		if s < 8:
+			move_indices = np.where(self.distances_seconds == s)
+			target_hand_angles[move_indices] = self.next_target[move_indices]
 			return True
-
-		elif s == 4:
-			target_hand_angles[:, :, 1] = self.next_target[:, :, 1]
-			return True
-
 		else:
 			return False
