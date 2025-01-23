@@ -110,11 +110,11 @@ void i2cReceiveEvent(int howMany)
   else if(howMany == 1) { //other command
     int cmd = Wire.read();
     if(cmd == 0x40) { //Reset 0 offsets
-      Serial.println("reset");
-      target0 = stepper0.currentPosition() % 360;
-      target1 = stepper1.currentPosition() % 360;
-      stepper0.setCurrentPosition(target0);
-      stepper1.setCurrentPosition(target1);      
+      Serial.println("reset - disabled");
+      // target0 = stepper0.currentPosition() % 360;
+      // target1 = stepper1.currentPosition() % 360;
+      // stepper0.setCurrentPosition(target0);
+      // stepper1.setCurrentPosition(target1);      
     }
   }
   else
