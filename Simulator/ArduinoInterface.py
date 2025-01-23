@@ -15,7 +15,7 @@ if test_environment:
 		def transmitTargetPositions(self, target_angles):
 			pass
 
-		def setEnabledState(self, enabled):
+		def resetHandPositions(self):
 			pass
 else:
     
@@ -39,12 +39,11 @@ else:
 			except Exception as e:
 				print('writing to i2c: ', e)
 
-		def setEnabledState(self, enabled):
-			#output a gpio led
-			pass
-
-		#on changed state from arduino gpios:
-		#if self.chc: self.chc.toggleClockState()
+		def resetHandPositions(self):
+			try:
+				self.i2c.write_byte(2, 0x40)
+			except Exception as e:
+				print('writing byte to i2c: ', e)
 
 
 if __name__ == "__main__":

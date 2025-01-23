@@ -31,7 +31,7 @@ class ClockHandController(object):
 
 
     target_hand_angles = DrawClock.clock_positions_base
-    actual_hand_angles = np.zeros_like(target_hand_angles) * 270
+    actual_hand_angles = np.zeros_like(target_hand_angles)
     hand_velocities = np.zeros_like(DrawClock.clock_positions_base)
 
     stop_threads_flag = False
@@ -113,6 +113,7 @@ class ClockHandController(object):
 
 
     def updateTargetPositionsThreadFunc(self):
+        interval_seconds = 1.0
         starttime = time.monotonic()
         while not self.stop_threads_flag:
             cur_time = datetime.datetime.now()
@@ -121,17 +122,27 @@ class ClockHandController(object):
             second = cur_time.second
 
             current_time_tuple = (hour, minute, second)
+
+            if self.currentAlgorithm.shouldResetHandPositions(hour, minute, second):
+                self.target_hand_angles = self.target_hand_angles % 360
+                self.actual_hand_angles = self.actual_hand_angles % 360
+                self.arduinoInterface.resetHandPositions()
+
             if self.currentAlgorithm.updateHandPositions(hour, minute, second, self.target_hand_angles):                       
                 self.arduinoInterface.transmitTargetPositions(self.target_hand_angles)
 
 
-            time.sleep(1.0 - ((time.monotonic() - starttime) % 1.0))
+            time.sleep(interval_seconds - ((time.monotonic() - starttime) % interval_seconds))
 
 
     def updateDrawPositionsThreadFunc(self):
+        interval_seconds = 0.05
+        starttime = time.monotonic()
+
         while not self.stop_threads_flag:
-            time.sleep(0.05)
             self.update_real_hand_angles_from_targets(self.actual_hand_angles, self.target_hand_angles, self.hand_velocities)
+
+            time.sleep(interval_seconds - ((time.monotonic() - starttime) % interval_seconds))
 
 
     def enableAlgo(self, algoName):

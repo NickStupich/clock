@@ -6,7 +6,7 @@ from bokeh.models import AnnularWedge, ColumnDataSource, Grid, LinearAxis, Plot,
 
 n_rows = 3
 n_cols = 8
-clock_positions_base = np.ones((n_rows, n_cols, 2)) * 270
+clock_positions_base = np.zeros((n_rows, n_cols, 2)) 
 
 if 0:
     #dimensions

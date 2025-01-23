@@ -122,6 +122,13 @@ void i2cReceiveEvent(int howMany)
       stepper1.moveTo(DEGREES_TO_STEPS(x1)); 
     }
   }
+  else if(howMany == 1) { //other command
+    int cmd = Wire.read();
+    if(cmd == 0x40) { //Reset 0 offsets
+      stepper0.setCurrentPosition(stepper0.currentPosition() % 360);
+      stepper1.setCurrentPosition(stepper1.currentPosition() % 360);
+    }
+  }
   else
   {
     Serial.println("i2c error");

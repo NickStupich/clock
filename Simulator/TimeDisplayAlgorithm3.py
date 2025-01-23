@@ -8,16 +8,20 @@ class TimeDisplayAlgorithm3(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 	def __init__(self):
 		self.last_h = -1
 		self.last_m = -1
-		self.animation_counter = 0
 		self.first_time = True
 
 		self.next_target = np.zeros_like(DrawClock.clock_positions_base)
 
 
 	def select(self):
-		self.animation_counter = 0
 		self.first_time = True
 
+
+	def shouldResetHandPositions(self,h,m,s):
+		if s == 59 and not self.first_time:
+			return True
+		else:
+			return False
 
 	def updateHandPositions(self, h, m, s, target_hand_angles):
 
@@ -34,20 +38,19 @@ class TimeDisplayAlgorithm3(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 			DrawCharacters.draw_digit(minute1, self.next_target[:, 4:6])
 			DrawCharacters.draw_digit(minute2, self.next_target[:, 6:8])
 
-			self.animation_counter += 1
-			self.next_target[:,:,:] += 360 * self.animation_counter
-
 			self.last_h = h
 			self.last_m = m
 
 			x = np.where(self.next_target < (target_hand_angles + 360))
 			self.next_target[x] += 360
 
-			hand_move_offsets = np.ones_like(self.next_target) * 360000
-			hand_move_offsets[:,:,1] += 180
+			x2 = np.where(self.next_target < (target_hand_angles + 360))
+			self.next_target[x2] += 360
 
-			self.distances_seconds = (8 - (np.abs(target_hand_angles - hand_move_offsets) / 45 )) % 8
-		
+			hand_move_offsets0 = np.ones_like(self.next_target) * 360000
+			hand_move_offsets0[:,:,1] += 180
+			self.distances_seconds = (8 - (np.abs(target_hand_angles - hand_move_offsets0) / 45 )) % 8
+
 		if self.first_time: #go straight there right away
 			target_hand_angles[:,:] = self.next_target[:,:]
 			self.first_time = False
