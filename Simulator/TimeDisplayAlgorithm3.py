@@ -17,11 +17,11 @@ class TimeDisplayAlgorithm3(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 		self.first_time = True
 
 
-	def shouldResetHandPositions(self,h,m,s):
-		if s == 59 and not self.first_time:
-			return True
-		else:
-			return False
+	# def shouldResetHandPositions(self,h,m,s):
+	# 	if s == 59 and not self.first_time:
+	# 		return True
+	# 	else:
+	# 		return False
 
 	def updateHandPositions(self, h, m, s, target_hand_angles):
 
@@ -40,7 +40,7 @@ class TimeDisplayAlgorithm3(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 
 			self.last_h = h
 			self.last_m = m
-
+			
 			x = np.where(self.next_target < (target_hand_angles + 360))
 			self.next_target[x] += 360
 

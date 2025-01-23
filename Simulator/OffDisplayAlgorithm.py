@@ -22,5 +22,5 @@ class OffDisplayAlgorithm(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 			return False
 
 
-	def shouldResetHandPositions(self,h,m,s):
-		return self.needs_update
+	# def shouldResetHandPositions(self,h,m,s):
+	# 	return self.needs_update

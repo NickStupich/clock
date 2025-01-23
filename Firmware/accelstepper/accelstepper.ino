@@ -10,8 +10,8 @@
 #define USE_MICROSTEPS 1
 #define MONITOR_PIN 12
 
-#define MOTOR_ROW 2
-#define MOTOR_COL 5
+#define MOTOR_ROW 0
+#define MOTOR_COL 0
 
 #if USE_MICROSTEPS
 bool microstepMode = true;
@@ -35,6 +35,9 @@ bool microstepMode = false;
 
 MotorVID28 motor0(NUM_STEPS, microstepMode, 5, 3, 6);
 MotorVID28 motor1(NUM_STEPS, microstepMode, 10, 9, 11);
+
+int target0 = 0;
+int target1 = 0;
 
 void stepper0_fw() { 
   motor0.stepUp(); 
@@ -70,25 +73,11 @@ void setup() {
   stepper1.setMaxSpeed(HAND_SPEED);
   stepper1.setAcceleration(HAND_ACCELERATION);
   
-  // Serial.println(TCCR0B, HEX);
-  // Serial.println(TCCR1B, HEX);
-  // Serial.println(TCCR2B, HEX);
-
   int divisor = 1;
   setPrescaler(0, divisor);
   setPrescaler(1, divisor);
   setPrescaler(2, divisor);
   
-  // Serial.println(TCCR0B, HEX);
-  // Serial.println(TCCR1B, HEX);
-  // Serial.println(TCCR2B, HEX);
-
-  //pinMode(MONITOR_PIN, OUTPUT);
-  stepper0.moveTo(DEGREES_TO_STEPS(-360));
-  stepper1.moveTo(DEGREES_TO_STEPS(360));
-  //stepper0.moveTo(0);
-  //stepper1.moveTo(0);
-
   Wire.begin(2);                // join i2c bus with address 
   Wire.onReceive(i2cReceiveEvent);  
 }
@@ -98,35 +87,34 @@ void i2cReceiveEvent(int howMany)
 {
   if(howMany == 25) {
     int index = Wire.read();
-    Serial.println(index);
     int size = Wire.readBytes(&i2cReceiveBuffer[index*24], 24);
     if(index == 3)
     {
-      /*
-      Serial.println("Full update");
-
-      for(int i=0;i<96;i++) {
-        Serial.print(i);
-        Serial.print("\t");
-        Serial.println(i2cReceiveBuffer[i]);
-      }
-      */
-
       int16_t *i2cProcessPtr = (int16_t*)(&i2cReceiveBuffer[(MOTOR_ROW * 8 + MOTOR_COL) * 4]);
       int x0 = i2cProcessPtr[0];
       int x1 = i2cProcessPtr[1];
-      // Serial.println(i2cReceiveBuffer
-      Serial.println(x0);
-      Serial.println(x1);
-      stepper0.moveTo(DEGREES_TO_STEPS(x0)); 
-      stepper1.moveTo(DEGREES_TO_STEPS(x1)); 
+      
+      if(x0 != target0) {
+        Serial.println(x0);
+        stepper0.moveTo(DEGREES_TO_STEPS(x0)); 
+        target0 = x0;
+      }
+
+      if(x1 != target1) {
+        Serial.println(x1);
+        stepper1.moveTo(DEGREES_TO_STEPS(x1)); 
+        target1 = x1;
+      }
     }
   }
   else if(howMany == 1) { //other command
     int cmd = Wire.read();
     if(cmd == 0x40) { //Reset 0 offsets
-      stepper0.setCurrentPosition(stepper0.currentPosition() % 360);
-      stepper1.setCurrentPosition(stepper1.currentPosition() % 360);
+      Serial.println("reset");
+      target0 = stepper0.currentPosition() % 360;
+      target1 = stepper1.currentPosition() % 360;
+      stepper0.setCurrentPosition(target0);
+      stepper1.setCurrentPosition(target1);      
     }
   }
   else
