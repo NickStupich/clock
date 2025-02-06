@@ -97,6 +97,8 @@ class ClockHandController(object):
         
         actual_hand_angles[:,:,:] = new_hand_angles[:,:,:]
 
+    def ArduinoInterfaceType(self):
+        return self.arduinoInterface.name
 
     def algorithmNames(self):
         return list(self.algorithms_dict.keys())

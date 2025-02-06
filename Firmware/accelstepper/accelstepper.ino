@@ -80,6 +80,9 @@ void setup() {
   
   Wire.begin(2);                // join i2c bus with address 
   Wire.onReceive(i2cReceiveEvent);  
+
+  stepper0.moveTo(DEGREES_TO_STEPS(360));
+  stepper1.moveTo(DEGREES_TO_STEPS(-360));
 }
 
 uint8_t i2cReceiveBuffer[96];
@@ -130,12 +133,36 @@ void i2cReceiveEvent(int howMany)
 
 // long start_time = -1;
 // long end_time = -1;
+bool lastRunning0 = false;
+bool lastRunning1 = false;
 void loop(void)
 {  
   //delay(1);
   
   bool running0 = stepper0.run();
   bool running1 = stepper1.run();
+
+  if(!running0 && lastRunning0) {
+      long position0 = stepper0.currentPosition();
+      Serial.print("motor 0 ");
+      Serial.print(position0);
+      Serial.print(" -> ");
+      Serial.println(position0 % DEGREES_TO_STEPS(360));
+      stepper0.setCurrentPosition(position0 % 360);
+  }
+  lastRunning0 = running0;
+
+  
+  if(!running1 && lastRunning1) {
+      long position1 = stepper1.currentPosition();
+      Serial.print("motor 1 ");
+      Serial.print(position1);
+      Serial.print(" -> ");
+      Serial.println(position1 % DEGREES_TO_STEPS(360));
+      stepper1.setCurrentPosition(position1 % DEGREES_TO_STEPS(360));
+  }
+  lastRunning1 = running1;
+  
   /*
   // Serial.println(stopped1);
 

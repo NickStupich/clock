@@ -10,7 +10,7 @@ except (ImportError, RuntimeError):
 if test_environment:
 	class ArduinoInterface(object):
 		def __init__(self, clock_hand_controller):
-			pass
+			self.name = "Test Arduino Interface"
 
 		def transmitTargetPositions(self, target_angles):
 			pass
@@ -26,6 +26,7 @@ else:
 		def __init__(self, clock_hand_controller):
 			self.chc = clock_hand_controller
 			self.i2c = smbus.SMBus(1)
+			self.name = "I2C Arduino Interface"
 
 		def transmitTargetPositions(self, target_angles):
 			to_send = list(np.ascontiguousarray(target_angles, dtype='<i2').tobytes())

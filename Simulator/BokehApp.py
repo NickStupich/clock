@@ -3,7 +3,7 @@ from bokeh.server.server import Server
 from bokeh.application import Application
 from bokeh.application.handlers.function import FunctionHandler
 from bokeh.plotting import figure, ColumnDataSource, curdoc
-from bokeh.models import Plot, Range1d, Select
+from bokeh.models import Plot, Range1d, Select, Div
 from bokeh.layouts import row,column
 
 from tornado.ioloop import IOLoop
@@ -53,11 +53,13 @@ class BokehApp():
         self.algorithmSelector = Select(title='Display type: ', value=self.chc.currentAlgorithmName, options=algoMenu)
         self.algorithmSelector.on_change('value', self.algoDropDownChange)
 
+        arduinoInterfaceContent = Div(text=self.chc.ArduinoInterfaceType())
+
         def update():
             new_data_dict = DrawClock.angles_to_source_dict(self.chc.getDrawPositions())
             source.data = new_data_dict
 
-        doc.add_root(column(plot, self.algorithmSelector))
+        doc.add_root(column(plot, self.algorithmSelector, arduinoInterfaceContent))
         doc.add_periodic_callback(update, 50)
         
 
