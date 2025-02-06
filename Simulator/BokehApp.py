@@ -24,7 +24,7 @@ class BokehApp():
                 }, 
             io_loop = io_loop, 
             port = 5001,
-            allow_websocket_origin=["localhost:5001", "10.0.0.110:5001", "10.0.0.151:5001"])
+            allow_websocket_origin=["localhost:5001", "10.0.0.25:5001", "10.0.0.151:5001"])
         server.start()
         #server.show('/myapp')
 
