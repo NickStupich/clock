@@ -6,16 +6,9 @@ import datetime
 import DrawClock
 import ArduinoInterface
 
-#TODO: make MAX_VELOCITY such that full rotation is an even (8?) seconds
-#(/3 = steps per degree) (*64 - arduino clock ) 
-# ACCELERATION = (0.03 / 3) * 64 * 64 #degrees per second^2
-# MAX_VELOCITY = (2.0 / 3) * 64 #degrees per second - 
-
 ACCELERATION = (45)
 MAX_VELOCITY = (360 / 8) #degrees per second
 
-
-                 #degrees per second
 
 import OffDisplayAlgorithm
 import TimeDisplayAlgorithm
@@ -32,7 +25,8 @@ class ClockHandController(object):
 
     target_hand_angles = DrawClock.clock_positions_base
     actual_hand_angles = np.zeros_like(target_hand_angles)
-    hand_velocities = np.zeros_like(DrawClock.clock_positions_base)
+    hand_velocities = np.zeros_like(target_hand_angles)
+    reset_hand_angles = np.zeros_like(target_hand_angles, dtype='int')
 
     stop_threads_flag = False
     
@@ -67,7 +61,7 @@ class ClockHandController(object):
         self.drawPositionThread.start()
 
 
-    def update_real_hand_angles_from_targets(self, actual_hand_angles, target_hand_angles, hand_velocities):
+    def update_real_hand_angles_from_targets(self, actual_hand_angles, target_hand_angles, hand_velocities, reset_hand_angles):
         
         current_call_time = datetime.datetime.now()
 
@@ -91,11 +85,15 @@ class ClockHandController(object):
 
         new_hand_angles = actual_hand_angles + move
         stop_indices = np.where(new_distance_remaining * distance_remaining <= 0)
+        reset_indices = np.where(reset_hand_angles & (new_distance_remaining * distance_remaining <= 0))
         
+        target_hand_angles[reset_indices] = target_hand_angles[reset_indices] % 360
         new_hand_angles[stop_indices] = target_hand_angles[stop_indices]
         hand_velocities[stop_indices] = 0
+        reset_hand_angles[reset_indices] = 0
         
         actual_hand_angles[:,:,:] = new_hand_angles[:,:,:]
+
 
     def ArduinoInterfaceType(self):
         return self.arduinoInterface.name
@@ -125,11 +123,6 @@ class ClockHandController(object):
 
             current_time_tuple = (hour, minute, second)
 
-            if self.currentAlgorithm.shouldResetHandPositions(hour, minute, second):
-                self.target_hand_angles = self.target_hand_angles % 360
-                self.actual_hand_angles = self.actual_hand_angles % 360
-                self.arduinoInterface.resetHandPositions()
-
             if self.currentAlgorithm.updateHandPositions(hour, minute, second, self.target_hand_angles):                       
                 self.arduinoInterface.transmitTargetPositions(self.target_hand_angles)
 
@@ -142,7 +135,7 @@ class ClockHandController(object):
         starttime = time.monotonic()
 
         while not self.stop_threads_flag:
-            self.update_real_hand_angles_from_targets(self.actual_hand_angles, self.target_hand_angles, self.hand_velocities)
+            self.update_real_hand_angles_from_targets(self.actual_hand_angles, self.target_hand_angles, self.hand_velocities, self.reset_hand_angles)
 
             time.sleep(interval_seconds - ((time.monotonic() - starttime) % interval_seconds))
 

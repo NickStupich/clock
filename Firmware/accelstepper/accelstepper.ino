@@ -26,26 +26,20 @@ bool microstepMode = false;
 #define DEGREES_TO_STEPS(x)  (3L*x * STEPS_PER_STEP)
 #define NUM_STEPS (DEGREES_TO_STEPS(360))
 
-// #define HAND_SPEED (2.0 * STEPS_PER_STEP)
 #define HAND_SPEED (DEGREES_TO_STEPS(360) / 8.0 / TIMER_ADJUSTMENT_FACTOR)
-// #define HAND_SPEED (128 * STEPS_PER_STEP) #without timer adjustment
-// #define HAND_ACCELERATION (0.03 * STEPS_PER_STEP)
-// #define HAND_ACCELERATION (122 * STEPS_PER_STEP)
 #define HAND_ACCELERATION (DEGREES_TO_STEPS(45) / (TIMER_ADJUSTMENT_FACTOR * TIMER_ADJUSTMENT_FACTOR))
 
-MotorVID28 motor0(NUM_STEPS, microstepMode, 5, 3, 6);
-MotorVID28 motor1(NUM_STEPS, microstepMode, 10, 9, 11);
+MotorVID28 motor0(NUM_STEPS, microstepMode, 6, 3, 5);
+MotorVID28 motor1(NUM_STEPS, microstepMode, 11, 9, 10);
 
 int target0 = 0;
 int target1 = 0;
 
 void stepper0_fw() { 
   motor0.stepUp(); 
-  //digitalWrite(MONITOR_PIN, motor0.currentStep & 0x1); 
 }
 void stepper0_bw() { 
   motor0.stepDown(); 
-  //digitalWrite(MONITOR_PIN, motor1.currentStep & 0x1);
 }
 
 void stepper1_fw() { motor1.stepUp(); }
@@ -81,8 +75,8 @@ void setup() {
   Wire.begin(2);                // join i2c bus with address 
   Wire.onReceive(i2cReceiveEvent);  
 
-  stepper0.moveTo(DEGREES_TO_STEPS(360));
-  stepper1.moveTo(DEGREES_TO_STEPS(-360));
+  // stepper0.moveTo(DEGREES_TO_STEPS(360));
+  // stepper1.moveTo(DEGREES_TO_STEPS(-360));
 }
 
 uint8_t i2cReceiveBuffer[96];
@@ -110,16 +104,6 @@ void i2cReceiveEvent(int howMany)
       }
     }
   }
-  else if(howMany == 1) { //other command
-    int cmd = Wire.read();
-    if(cmd == 0x40) { //Reset 0 offsets
-      Serial.println("reset - disabled");
-      // target0 = stepper0.currentPosition() % 360;
-      // target1 = stepper1.currentPosition() % 360;
-      // stepper0.setCurrentPosition(target0);
-      // stepper1.setCurrentPosition(target1);      
-    }
-  }
   else
   {
     Serial.println("i2c error");
@@ -131,13 +115,11 @@ void i2cReceiveEvent(int howMany)
   }
 }
 
-// long start_time = -1;
-// long end_time = -1;
 bool lastRunning0 = false;
 bool lastRunning1 = false;
 void loop(void)
 {  
-  //delay(1);
+  delay(1);
   
   bool running0 = stepper0.run();
   bool running1 = stepper1.run();
@@ -151,7 +133,6 @@ void loop(void)
       stepper0.setCurrentPosition(position0 % 360);
   }
   lastRunning0 = running0;
-
   
   if(!running1 && lastRunning1) {
       long position1 = stepper1.currentPosition();
@@ -162,21 +143,4 @@ void loop(void)
       stepper1.setCurrentPosition(position1 % DEGREES_TO_STEPS(360));
   }
   lastRunning1 = running1;
-  
-  /*
-  // Serial.println(stopped1);
-
-  if(running1 && start_time < 0) {
-    start_time = millis();
-  }
-  else if(!running1 && end_time < 0) {
-    end_time = millis();
-  }
-  else if(start_time >= 0 && end_time >= 0) {
-    long circleTime = end_time - start_time;
-    Serial.println(circleTime/64);
-    start_time = -1;
-    end_time = -1;
-  }
-  */
 }

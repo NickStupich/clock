@@ -16,13 +16,6 @@ class TimeDisplayAlgorithm3(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 	def select(self):
 		self.first_time = True
 
-
-	# def shouldResetHandPositions(self,h,m,s):
-	# 	if s == 59 and not self.first_time:
-	# 		return True
-	# 	else:
-	# 		return False
-
 	def updateHandPositions(self, h, m, s, target_hand_angles):
 
 		if h != self.last_h or m != self.last_m:

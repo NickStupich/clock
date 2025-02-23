@@ -7,6 +7,3 @@ class BaseDisplayAlgorithm(object):
 
 	def select(self):
 		pass
-
-	def shouldResetHandPositions(self,h,m,s):
-		return False
