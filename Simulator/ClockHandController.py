@@ -1,5 +1,5 @@
 import time
-from threading import Thread
+import threading
 import numpy as np
 import datetime
 
@@ -36,6 +36,7 @@ class ClockHandController(object):
 
         self.bokehApp = bokehApp
         self.clock_enabled = False
+        self.lock = threading.Lock()
 
         self.arduinoInterface = ArduinoInterface.ArduinoInterface(self)
 
@@ -52,12 +53,12 @@ class ClockHandController(object):
         self.currentAlgorithm = self.algorithms_dict[self.currentAlgorithmName]
 
         #sets target positions. for simulator + real thing
-        self.targetPositionThread = Thread(target = self.updateTargetPositionsThreadFunc)
+        self.targetPositionThread = threading.Thread(target = self.updateTargetPositionsThreadFunc)
         self.targetPositionThread.start()
 
         #just for the simulator
         self.last_hand_update_call_time = datetime.datetime.now()
-        self.drawPositionThread = Thread(target = self.updateDrawPositionsThreadFunc)
+        self.drawPositionThread = threading.Thread(target = self.updateDrawPositionsThreadFunc)
         self.drawPositionThread.start()
 
 
@@ -87,10 +88,11 @@ class ClockHandController(object):
         stop_indices = np.where(new_distance_remaining * distance_remaining <= 0)
         reset_indices = np.where(reset_hand_angles & (new_distance_remaining * distance_remaining <= 0))
         
-        target_hand_angles[reset_indices] = target_hand_angles[reset_indices] % 360
-        new_hand_angles[stop_indices] = target_hand_angles[stop_indices]
-        hand_velocities[stop_indices] = 0
-        reset_hand_angles[reset_indices] = 0
+        with self.lock:
+            target_hand_angles[reset_indices] = target_hand_angles[reset_indices] % 360
+            new_hand_angles[stop_indices] = target_hand_angles[stop_indices]
+            hand_velocities[stop_indices] = 0
+            reset_hand_angles[reset_indices] = 0
         
         actual_hand_angles[:,:,:] = new_hand_angles[:,:,:]
 
@@ -123,9 +125,9 @@ class ClockHandController(object):
 
             current_time_tuple = (hour, minute, second)
 
-            if self.currentAlgorithm.updateHandPositions(hour, minute, second, self.target_hand_angles):                       
-                self.arduinoInterface.transmitTargetPositions(self.target_hand_angles)
-                self.reset_hand_angles[:,:] = 1 #reset all?
+            with self.lock:
+                if self.currentAlgorithm.updateHandPositions(hour, minute, second, self.target_hand_angles, self.reset_hand_angles):                       
+                    self.arduinoInterface.transmitTargetPositions(self.target_hand_angles)
 
             print(self.target_hand_angles[0,0])
             time.sleep(interval_seconds - ((time.monotonic() - starttime) % interval_seconds))

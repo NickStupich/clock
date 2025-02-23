@@ -9,7 +9,7 @@ class OffDisplayAlgorithm(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 	def select(self):
 		self.needs_update = True
 
-	def updateHandPositions(self, h, m, s, target_hand_angles):
+	def updateHandPositions(self, h, m, s, target_hand_angles, new_move_hand_angles):
 		if self.needs_update:
 			DrawCharacters.draw_digit(-1, target_hand_angles[:, 0:2])
 			DrawCharacters.draw_digit(-1, target_hand_angles[:, 2:4])

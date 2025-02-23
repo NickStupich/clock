@@ -20,7 +20,7 @@ class TextDisplayAlgorithm(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 		self.text_lines = newText
 
 
-	def updateHandPositions(self, h, m, s, target_hand_angles):
+	def updateHandPositions(self, h, m, s, target_hand_angles, new_move_hand_angles):
 
 		x = h * 3600 + m * 60 + s
 
@@ -32,6 +32,7 @@ class TextDisplayAlgorithm(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 			DrawCharacters.draw_letter(cur_text[1], target_hand_angles[:, 2:4])
 			DrawCharacters.draw_letter(cur_text[2], target_hand_angles[:, 4:6])
 			DrawCharacters.draw_letter(cur_text[3], target_hand_angles[:, 6:8])
+			new_move_hand_angles[:,:,:] = 1
 
 			self.next_index += 1
 			self.last_x = x

@@ -18,7 +18,7 @@ class TimeDisplayAlgorithm2(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 		self.first_time = True
 
 
-	def updateHandPositions(self, h, m, s, target_hand_angles):
+	def updateHandPositions(self, h, m, s, target_hand_angles, new_move_hand_angles):
 
 		if h != self.last_h or m != self.last_m:
 			hour1 = h // 10
@@ -32,6 +32,7 @@ class TimeDisplayAlgorithm2(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 			DrawCharacters.draw_digit(hour2, self.next_target[:, 2:4])
 			DrawCharacters.draw_digit(minute1, self.next_target[:, 4:6])
 			DrawCharacters.draw_digit(minute2, self.next_target[:, 6:8])
+			new_move_hand_angles[:,:,:] = 1
 
 			self.add_transition_animation(self.next_target)
 

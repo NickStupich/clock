@@ -16,7 +16,7 @@ class TimeDisplayAlgorithm3(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 	def select(self):
 		self.first_time = True
 
-	def updateHandPositions(self, h, m, s, target_hand_angles):
+	def updateHandPositions(self, h, m, s, target_hand_angles, new_move_hand_angles):
 
 		if h != self.last_h or m != self.last_m:
 			hour1 = h // 10
@@ -46,12 +46,14 @@ class TimeDisplayAlgorithm3(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 
 		if self.first_time: #go straight there right away
 			target_hand_angles[:,:] = self.next_target[:,:]
+			new_move_hand_angles[:,:,:] = 1
 			self.first_time = False
 			return True
 
 		if s < 8:
 			move_indices = np.where(self.distances_seconds == s)
 			target_hand_angles[move_indices] = self.next_target[move_indices]
+			new_move_hand_angles[move_indices] = 1
 			return True
 		else:
 			return False

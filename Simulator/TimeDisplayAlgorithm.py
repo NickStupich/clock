@@ -12,7 +12,7 @@ class TimeDisplayAlgorithm(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 		self.animation_counter = 0
 
 
-	def updateHandPositions(self, h, m, s, target_hand_angles):
+	def updateHandPositions(self, h, m, s, target_hand_angles, new_move_hand_angles):
 
 		if h != self.last_h or m != self.last_m:
 			hour1 = h // 10
@@ -27,6 +27,7 @@ class TimeDisplayAlgorithm(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 			DrawCharacters.draw_digit(minute2, target_hand_angles[:, 6:8])
 
 			self.add_transition_animation(target_hand_angles)
+			new_move_hand_angles[:,:,:] = 1
 
 			self.last_h = h
 			self.last_m = m
