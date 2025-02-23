@@ -125,8 +125,9 @@ class ClockHandController(object):
 
             if self.currentAlgorithm.updateHandPositions(hour, minute, second, self.target_hand_angles):                       
                 self.arduinoInterface.transmitTargetPositions(self.target_hand_angles)
+                self.reset_hand_angles[:,:] = 1 #reset all?
 
-
+            print(self.target_hand_angles[0,0])
             time.sleep(interval_seconds - ((time.monotonic() - starttime) % interval_seconds))
 
 
