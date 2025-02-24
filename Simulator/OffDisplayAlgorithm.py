@@ -16,6 +16,7 @@ class OffDisplayAlgorithm(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 			DrawCharacters.draw_digit(-1, target_hand_angles[:, 4:6])
 			DrawCharacters.draw_digit(-1, target_hand_angles[:, 6:8])
 			self.needs_update = False
+			new_move_hand_angles[:,:,:] = 1
 
 			return True 
 		else:

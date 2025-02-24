@@ -60,6 +60,7 @@ else:
 			full_values_bytes = list(np.ascontiguousarray(target_angles, dtype='<i2').tobytes())
 
 			send_indices = np.where(new_moves.flatten())[0]
+			#print('send indices: ', send_indices)
 
 			if len(send_indices) > 0:
 
@@ -68,9 +69,13 @@ else:
 					full_encoded_send.append(int(i))
 					full_encoded_send.append(full_values_bytes[i*2])
 					full_encoded_send.append(full_values_bytes[i*2+1])
+				
+				#print(full_encoded_send)
 
-				for batch_index in range(0, len(send_indices) // MAX_I2C_WRITE_LEN):
+
+				for batch_index in range(0, int(np.ceil(len(send_indices) / MAX_I2C_WRITE_LEN))):
 					batch = full_encoded_send[batch_index * MAX_I2C_WRITE_LEN: (batch_index+1) * MAX_I2C_WRITE_LEN]
+					#print(batch)
 					try:
 						self.i2c.write_i2c_block_data(2, batch_index, batch)
 					except Exception as e:
@@ -90,4 +95,7 @@ if __name__ == "__main__":
     x = np.ones((3, 8, 2), dtype='int')
     x[0,0,0] = 1000
     x[1,1,1] = 42
-    ai.transmitTargetPositions(x)
+    newMoves = np.zeros((3,8,2), dtype='int')
+    newMoves[0,0,0] = 1
+    newMoves[0,2,1] = 1
+    ai.transmitTargetPositions(x, newMoves)
