@@ -1,4 +1,7 @@
 import time
+import numpy as np
+
+MAX_I2C_WRITE_LEN = 30 #smbus limitation
 
 try:
 	import RPi.GPIO as gpio
@@ -12,14 +15,39 @@ if test_environment:
 		def __init__(self, clock_hand_controller):
 			self.name = "Test Arduino Interface"
 
-		def transmitTargetPositions(self, target_angles):
+		def transmitTargetPositions(self, target_angles, new_moves):
+			full_values_bytes = list(np.ascontiguousarray(target_angles, dtype='<i2').tobytes())
+			# print(full_values_bytes)
+
+			send_indices = np.where(new_moves.flatten())[0]
+			print(new_moves)
+			print(send_indices)
+
+			if len(send_indices) > 0:
+
+				full_encoded_send = []
+				for i in send_indices:
+					full_encoded_send.append(int(i))
+					full_encoded_send.append(full_values_bytes[i*2])
+					full_encoded_send.append(full_values_bytes[i*2+1])
+
+				print(full_encoded_send)
+
+				for batch_index in range(0, len(send_indices) // MAX_I2C_WRITE_LEN):
+					batch = full_encoded_send[batch_index * MAX_I2C_WRITE_LEN: (batch_index+1) * MAX_I2C_WRITE_LEN]
+					# self.i2c.write_i2c_block_data(2, batch_index, batch)
+
+					
+
+
+
+			# print(new_moves)
 			pass
 
 		def resetHandPositions(self):
 			pass
 else:
     
-	import numpy as np
 	import smbus
 
 	class ArduinoInterface(object):
@@ -28,17 +56,26 @@ else:
 			self.i2c = smbus.SMBus(1)
 			self.name = "I2C Arduino Interface"
 
-		def transmitTargetPositions(self, target_angles):
-			to_send = list(np.ascontiguousarray(target_angles, dtype='<i2').tobytes())
-			#print(to_send)
+		def transmitTargetPositions(self, target_angles, new_moves):
+			full_values_bytes = list(np.ascontiguousarray(target_angles, dtype='<i2').tobytes())
 
-			try:
-				self.i2c.write_i2c_block_data(2, 0, to_send[:24])
-				self.i2c.write_i2c_block_data(2, 1, to_send[24:48])
-				self.i2c.write_i2c_block_data(2, 2, to_send[48:72])
-				self.i2c.write_i2c_block_data(2, 3, to_send[72:96])
-			except Exception as e:
-				print('writing to i2c: ', e)
+			send_indices = np.where(new_moves.flatten())[0]
+
+			if len(send_indices) > 0:
+
+				full_encoded_send = []
+				for i in send_indices:
+					full_encoded_send.append(int(i))
+					full_encoded_send.append(full_values_bytes[i*2])
+					full_encoded_send.append(full_values_bytes[i*2+1])
+
+				for batch_index in range(0, len(send_indices) // MAX_I2C_WRITE_LEN):
+					batch = full_encoded_send[batch_index * MAX_I2C_WRITE_LEN: (batch_index+1) * MAX_I2C_WRITE_LEN]
+					try:
+						self.i2c.write_i2c_block_data(2, batch_index, batch)
+					except Exception as e:
+						print('writing to i2c: ', e)
+
 
 		def resetHandPositions(self):
 			try:

@@ -26,9 +26,8 @@ class ClockHandController(object):
     target_hand_angles = np.copy(DrawClock.clock_positions_base)
     actual_hand_angles = np.zeros_like(target_hand_angles)
     hand_velocities = np.zeros_like(target_hand_angles)
-    new_move_hand_angles = np.zeros_like(target_hand_angles, dtype='int')
+    new_moves = np.zeros_like(target_hand_angles, dtype='int')
     hand_move_in_progress = np.zeros_like(target_hand_angles, dtype='int')
-    arduino_target_hand_angles = np.copy(target_hand_angles[:,:,:])
 
     stop_threads_flag = False
     
@@ -128,12 +127,11 @@ class ClockHandController(object):
             current_time_tuple = (hour, minute, second)
 
             with self.lock:
-                self.new_move_hand_angles[:,:,:] = 0
-                if self.currentAlgorithm.updateHandPositions(hour, minute, second, self.target_hand_angles, self.new_move_hand_angles):         
-                    w = np.where(self.new_move_hand_angles)
-                    self.hand_move_in_progress[w] = 1
-                    self.arduino_target_hand_angles[w] = self.target_hand_angles[w]        
-                    self.arduinoInterface.transmitTargetPositions(self.arduino_target_hand_angles)
+                self.new_moves[:,:,:] = 0
+                if self.currentAlgorithm.updateHandPositions(hour, minute, second, self.target_hand_angles, self.new_moves):         
+                    w = np.where(self.new_moves)
+                    self.hand_move_in_progress[w] = 1  
+                    self.arduinoInterface.transmitTargetPositions(self.target_hand_angles, self.new_moves)
 
             time.sleep(interval_seconds - ((time.monotonic() - starttime) % interval_seconds))
 

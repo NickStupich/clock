@@ -13,6 +13,9 @@
 #define MOTOR_ROW 0
 #define MOTOR_COL 0
 
+#define MOTOR0_INDEX ((MOTOR_ROW * 8 + MOTOR_COL) * 2)
+#define MOTOR1_INDEX ((MOTOR_ROW * 8 + MOTOR_COL) * 2 + 1)
+
 #if USE_MICROSTEPS
 bool microstepMode = true;
 #define STEPS_PER_STEP ((long)(MOTORVID28_NUM_MICROSTEPS / 6))
@@ -74,35 +77,30 @@ void setup() {
   
   Wire.begin(2);                // join i2c bus with address 
   Wire.onReceive(i2cReceiveEvent);  
-
-  // stepper0.moveTo(DEGREES_TO_STEPS(360));
-  // stepper1.moveTo(DEGREES_TO_STEPS(-360));
 }
 
-uint8_t i2cReceiveBuffer[96];
+uint8_t i2cReceiveBuffer[144];
 void i2cReceiveEvent(int howMany)
 {
-  if(howMany == 25) {
-    int index = Wire.read();
-    int size = Wire.readBytes(&i2cReceiveBuffer[index*24], 24);
-    if(index == 3)
-    {
-      int16_t *i2cProcessPtr = (int16_t*)(&i2cReceiveBuffer[(MOTOR_ROW * 8 + MOTOR_COL) * 4]);
-      int x0 = i2cProcessPtr[0];
-      int x1 = i2cProcessPtr[1];
-      
-      if(x0 != target0) {
-        Serial.println(x0);
-        stepper0.moveTo(DEGREES_TO_STEPS(x0)); 
-        target0 = x0;
+  if(howMany % 3 == 1) { //length 3 + cmd byte
+    int batch_index = Wire.read();
+    int size = Wire.readBytes(i2cReceiveBuffer, howMany);
+    for(int i=0;i<size;i+=3) {
+      uint8_t index = i2cReceiveBuffer[i];
+      int16_t *value = (int16_t*)(&i2cReceiveBuffer[i+1]);
+      if(index == MOTOR0_INDEX) {
+        Serial.print("M0 -> ");
+        target0 = *value;
+        Serial.println(target0);
+        stepper0.moveTo(DEGREES_TO_STEPS(target0)); 
       }
-
-      if(x1 != target1) {
-        Serial.println(x1);
-        stepper1.moveTo(DEGREES_TO_STEPS(x1)); 
-        target1 = x1;
+      else if(index == MOTOR1_INDEX) {
+        Serial.print("M1 -> ");
+        target1 = *value;
+        Serial.println(target1);
+        stepper1.moveTo(DEGREES_TO_STEPS(target1)); 
       }
-    }
+    } 
   }
   else
   {
