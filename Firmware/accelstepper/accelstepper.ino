@@ -11,7 +11,7 @@
 #define MONITOR_PIN 12
 
 #define MOTOR_ROW 0
-#define MOTOR_COL 0
+#define MOTOR_COL 1
 
 #define MOTOR0_INDEX ((MOTOR_ROW * 8 + MOTOR_COL) * 2)
 #define MOTOR1_INDEX ((MOTOR_ROW * 8 + MOTOR_COL) * 2 + 1)
@@ -27,6 +27,7 @@ bool microstepMode = false;
 #define TIMER_ADJUSTMENT_FACTOR 64.0
 
 #define DEGREES_TO_STEPS(x)  (3L*x * STEPS_PER_STEP)
+#define STEPS_TO_DEGREES(x) (x / 3L / STEPS_PER_STEP)
 #define NUM_STEPS (DEGREES_TO_STEPS(360))
 
 #define HAND_SPEED (DEGREES_TO_STEPS(360) / 8.0 / TIMER_ADJUSTMENT_FACTOR)
@@ -38,15 +39,11 @@ MotorVID28 motor1(NUM_STEPS, microstepMode, 11, 9, 10);
 int target0 = 0;
 int target1 = 0;
 
-void stepper0_fw() { 
-  motor0.stepUp(); 
-}
-void stepper0_bw() { 
-  motor0.stepDown(); 
-}
+void stepper0_fw() { motor0.stepDown();}
+void stepper0_bw() { motor0.stepUp(); }
 
-void stepper1_fw() { motor1.stepUp(); }
-void stepper1_bw() { motor1.stepDown(); }
+void stepper1_fw() { motor1.stepDown(); }
+void stepper1_bw() { motor1.stepUp(); }
 
 AccelStepper stepper0(stepper0_bw, stepper0_fw);
 AccelStepper stepper1(stepper1_bw, stepper1_fw);
@@ -82,11 +79,13 @@ void setup() {
 uint8_t i2cReceiveBuffer[144];
 void i2cReceiveEvent(int howMany)
 {
+  //Serial.print(howMany);
   if(howMany % 3 == 1) { //length 3 + cmd byte
     int batch_index = Wire.read();
-    int size = Wire.readBytes(i2cReceiveBuffer, howMany);
+    int size = Wire.readBytes(i2cReceiveBuffer, howMany-1);
     for(int i=0;i<size;i+=3) {
       uint8_t index = i2cReceiveBuffer[i];
+      //Serial.print(index);
       int16_t *value = (int16_t*)(&i2cReceiveBuffer[i+1]);
       if(index == MOTOR0_INDEX) {
         Serial.print("M0 -> ");
@@ -124,21 +123,23 @@ void loop(void)
 
   if(!running0 && lastRunning0) {
       long position0 = stepper0.currentPosition();
+      long newPosition0 = position0 % DEGREES_TO_STEPS(360);
       Serial.print("motor 0 ");
-      Serial.print(position0);
+      Serial.print(STEPS_TO_DEGREES(position0));
       Serial.print(" -> ");
-      Serial.println(position0 % DEGREES_TO_STEPS(360));
-      stepper0.setCurrentPosition(position0 % 360);
+      Serial.println(STEPS_TO_DEGREES(newPosition0));
+      stepper0.setCurrentPosition(newPosition0);
   }
   lastRunning0 = running0;
   
   if(!running1 && lastRunning1) {
       long position1 = stepper1.currentPosition();
+      long newPosition1 = position1 % DEGREES_TO_STEPS(360);
       Serial.print("motor 1 ");
-      Serial.print(position1);
+      Serial.print(STEPS_TO_DEGREES(position1));
       Serial.print(" -> ");
-      Serial.println(position1 % DEGREES_TO_STEPS(360));
-      stepper1.setCurrentPosition(position1 % DEGREES_TO_STEPS(360));
+      Serial.println(STEPS_TO_DEGREES(newPosition1));
+      stepper1.setCurrentPosition(newPosition1);
   }
   lastRunning1 = running1;
 }
