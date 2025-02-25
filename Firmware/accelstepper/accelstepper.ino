@@ -10,11 +10,14 @@
 #define USE_MICROSTEPS 1
 #define MONITOR_PIN 12
 
-#define MOTOR_ROW 0
-#define MOTOR_COL 1
+#define MOTOR_ROW 2
+#define MOTOR_COL 7
 
 #define MOTOR0_INDEX ((MOTOR_ROW * 8 + MOTOR_COL) * 2)
 #define MOTOR1_INDEX ((MOTOR_ROW * 8 + MOTOR_COL) * 2 + 1)
+
+//this is still untested!
+#define PYTHON_MODULUS(n,m) (((n % m) + m) % m)  
 
 #if USE_MICROSTEPS
 bool microstepMode = true;
@@ -88,15 +91,15 @@ void i2cReceiveEvent(int howMany)
       //Serial.print(index);
       int16_t *value = (int16_t*)(&i2cReceiveBuffer[i+1]);
       if(index == MOTOR0_INDEX) {
-        Serial.print("M0 -> ");
+        //Serial.print("M0 -> ");
         target0 = *value;
-        Serial.println(target0);
+        //Serial.println(target0);
         stepper0.moveTo(DEGREES_TO_STEPS(target0)); 
       }
       else if(index == MOTOR1_INDEX) {
-        Serial.print("M1 -> ");
+        //Serial.print("M1 -> ");
         target1 = *value;
-        Serial.println(target1);
+        //Serial.println(target1);
         stepper1.moveTo(DEGREES_TO_STEPS(target1)); 
       }
     } 
@@ -123,7 +126,7 @@ void loop(void)
 
   if(!running0 && lastRunning0) {
       long position0 = stepper0.currentPosition();
-      long newPosition0 = position0 % DEGREES_TO_STEPS(360);
+      long newPosition0 = PYTHON_MODULUS(position0, DEGREES_TO_STEPS(360));
       Serial.print("motor 0 ");
       Serial.print(STEPS_TO_DEGREES(position0));
       Serial.print(" -> ");
@@ -134,7 +137,7 @@ void loop(void)
   
   if(!running1 && lastRunning1) {
       long position1 = stepper1.currentPosition();
-      long newPosition1 = position1 % DEGREES_TO_STEPS(360);
+      long newPosition1 = PYTHON_MODULUS(position1, DEGREES_TO_STEPS(360));
       Serial.print("motor 1 ");
       Serial.print(STEPS_TO_DEGREES(position1));
       Serial.print(" -> ");
