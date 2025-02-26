@@ -16,32 +16,6 @@ if test_environment:
 			self.name = "Test Arduino Interface"
 
 		def transmitTargetPositions(self, target_angles, new_moves):
-			full_values_bytes = list(np.ascontiguousarray(target_angles, dtype='<i2').tobytes())
-			# print(full_values_bytes)
-
-			send_indices = np.where(new_moves.flatten())[0]
-			print(new_moves)
-			print(send_indices)
-
-			if len(send_indices) > 0:
-
-				full_encoded_send = []
-				for i in send_indices:
-					full_encoded_send.append(int(i))
-					full_encoded_send.append(full_values_bytes[i*2])
-					full_encoded_send.append(full_values_bytes[i*2+1])
-
-				print(full_encoded_send)
-
-				for batch_index in range(0, len(send_indices) // MAX_I2C_WRITE_LEN):
-					batch = full_encoded_send[batch_index * MAX_I2C_WRITE_LEN: (batch_index+1) * MAX_I2C_WRITE_LEN]
-					# self.i2c.write_i2c_block_data(2, batch_index, batch)
-
-					
-
-
-
-			# print(new_moves)
 			pass
 
 		def resetHandPositions(self):

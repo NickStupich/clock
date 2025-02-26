@@ -79,23 +79,25 @@ class ClockHandController(object):
         hand_velocities += accelerations
         np.clip(hand_velocities, a_min=-MAX_VELOCITY, a_max=MAX_VELOCITY, out=hand_velocities)    
 
-        move = hand_velocities * elapsed_seconds #no scaling yet
-
-        new_angles = actual_hand_angles + move
-        new_distance_remaining = target_hand_angles - new_angles
-
+        move = hand_velocities * elapsed_seconds
 
         new_hand_angles = actual_hand_angles + move
-        stop_indices = np.where(new_distance_remaining * distance_remaining <= 0)
-        reset_indices = np.where(hand_move_in_progress & (new_distance_remaining * distance_remaining <= 0))
+        new_distance_remaining = target_hand_angles - new_hand_angles
+
+        # print(actual_hand_angles[0,0,0], target_hand_angles[0,0,0], hand_velocities[0,0,0], distance_remaining[0,0,0], new_distance_remaining[0,0,0])
+        # stop_indices = np.where(new_distance_remaining * distance_remaining <= 0)
+        stop_indices = np.where(hand_move_in_progress & (new_distance_remaining * distance_remaining <= 0))
         
         with self.lock:
-            target_hand_angles[reset_indices] = target_hand_angles[reset_indices] % 360
+            # print(hand_move_in_progress)
+            # print('stop: ', stop_indices)
+            actual_hand_angles[np.where(hand_move_in_progress)] = new_hand_angles[np.where(hand_move_in_progress)]
+            target_hand_angles[stop_indices] = target_hand_angles[stop_indices] % 360
             new_hand_angles[stop_indices] = target_hand_angles[stop_indices]
+            actual_hand_angles[stop_indices] = target_hand_angles[stop_indices]
             hand_velocities[stop_indices] = 0
-            hand_move_in_progress[reset_indices] = 0
+            hand_move_in_progress[stop_indices] = 0
         
-        actual_hand_angles[:,:,:] = new_hand_angles[:,:,:]
 
 
     def ArduinoInterfaceType(self):
@@ -129,6 +131,7 @@ class ClockHandController(object):
             with self.lock:
                 self.new_moves[:,:,:] = 0
                 if self.currentAlgorithm.updateHandPositions(hour, minute, second, self.target_hand_angles, self.new_moves):         
+                    # print('new hand positions', datetime.datetime.now())
                     w = np.where(self.new_moves)
                     self.hand_move_in_progress[w] = 1  
                     self.arduinoInterface.transmitTargetPositions(self.target_hand_angles, self.new_moves)

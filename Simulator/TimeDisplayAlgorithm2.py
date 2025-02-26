@@ -32,7 +32,6 @@ class TimeDisplayAlgorithm2(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 			DrawCharacters.draw_digit(hour2, self.next_target[:, 2:4])
 			DrawCharacters.draw_digit(minute1, self.next_target[:, 4:6])
 			DrawCharacters.draw_digit(minute2, self.next_target[:, 6:8])
-			new_move_hand_angles[:,:,:] = 1
 
 			self.add_transition_animation(self.next_target)
 
@@ -41,11 +40,13 @@ class TimeDisplayAlgorithm2(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 
 		if self.first_time: #go straight there right away
 			target_hand_angles[:,:] = self.next_target[:,:]
+			new_move_hand_angles[:,:,:] = 1
 			self.first_time = False
 			return True
 
 		elif s in range(self.next_target.shape[1]):
 			target_hand_angles[:, s] = self.next_target[:,s]
+			new_move_hand_angles[:,s] = 1
 			return True
 
 		else:
