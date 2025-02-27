@@ -117,9 +117,9 @@ class ClockHandController(object):
 
 
     def set_calibration(self, new_cal):
-        self.arduinoInterface.set_offsets(new_offsets)
+        self.arduinoInterface.set_offsets(new_cal)
         with self.lock:
-            self.arduinoInterface.transmitTargetPositions(self.target_hand_angles, self.new_moves)
+            self.arduinoInterface.transmitTargetPositions(self.target_hand_angles, np.ones_like(self.new_moves))
 
 
     def updateTargetPositionsThreadFunc(self):
