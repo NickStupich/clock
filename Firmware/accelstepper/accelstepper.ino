@@ -77,6 +77,9 @@ void setup() {
   
   Wire.begin(2);                // join i2c bus with address 
   Wire.onReceive(i2cReceiveEvent);  
+
+  // stepper0.moveTo(DEGREES_TO_STEPS(360));
+  // stepper1.moveTo(DEGREES_TO_STEPS(-360));
 }
 
 uint8_t i2cReceiveBuffer[144];

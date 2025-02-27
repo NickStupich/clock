@@ -1,5 +1,6 @@
 import time
 import numpy as np
+import DrawClock
 
 MAX_I2C_WRITE_LEN = 30 #smbus limitation
 
@@ -18,6 +19,9 @@ if test_environment:
 		def transmitTargetPositions(self, target_angles, new_moves):
 			pass
 
+		def set_offsets(self, new_offsets):
+			print(new_offsets)
+
 		def resetHandPositions(self):
 			pass
 else:
@@ -29,9 +33,13 @@ else:
 			self.chc = clock_hand_controller
 			self.i2c = smbus.SMBus(1)
 			self.name = "I2C Arduino Interface"
+			self.offsets = np.zeros_like(DrawClock.clock_positions_base)
+
+		def set_offsets(self, new_offsets):
+			self.offsets += new_offsets
 
 		def transmitTargetPositions(self, target_angles, new_moves):
-			full_values_bytes = list(np.ascontiguousarray(target_angles, dtype='<i2').tobytes())
+			full_values_bytes = list(np.ascontiguousarray(target_angles + self.offsets, dtype='<i2').tobytes())
 
 			send_indices = np.where(new_moves.flatten())[0]
 			#print('send indices: ', send_indices)
@@ -44,13 +52,8 @@ else:
 					full_encoded_send.append(full_values_bytes[i*2])
 					full_encoded_send.append(full_values_bytes[i*2+1])
 				
-				#print(full_encoded_send, len(full_encoded_send))
-
-
-#				for batch_index in range(0, int(np.ceil(float(len(send_indices)) / MAX_I2C_WRITE_LEN)))
 				for batch_index, batch_start in enumerate(range(0, len(full_encoded_send), MAX_I2C_WRITE_LEN)):
 					batch = full_encoded_send[batch_start: batch_start + MAX_I2C_WRITE_LEN]
-					#print(batch)
 					try:
 						self.i2c.write_i2c_block_data(2, batch_index, batch)
 					except Exception as e:

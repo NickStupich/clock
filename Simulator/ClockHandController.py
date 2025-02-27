@@ -9,13 +9,13 @@ import ArduinoInterface
 ACCELERATION = (45)
 MAX_VELOCITY = (360 / 8) #degrees per second
 
-
-import OffDisplayAlgorithm
-import TimeDisplayAlgorithm
-import TimeDisplayAlgorithm2
-import TimeDisplayAlgorithm3
-import TextDisplayAlgorithm
-import TestMotorsAlgorithm
+from DisplayAlgorithms import   OffDisplayAlgorithm,\
+                                TimeDisplayAlgorithm,\
+                                TimeDisplayAlgorithm2,\
+                                TimeDisplayAlgorithm3,\
+                                TextDisplayAlgorithm,\
+                                TestMotorsAlgorithm,\
+                                CalibrationDisplayAlgorithm
 
 
 
@@ -48,6 +48,7 @@ class ClockHandController(object):
                             'Time3' : TimeDisplayAlgorithm3.TimeDisplayAlgorithm3(),
                             'Text' : TextDisplayAlgorithm.TextDisplayAlgorithm(),
                             'MotorTest' : TestMotorsAlgorithm.TestMotorsAlgorithm(),
+                            'Calibration' : CalibrationDisplayAlgorithm.CalibrationDisplayAlgorithm(),
                             }
 
         self.currentAlgorithmName = 'Off'                    

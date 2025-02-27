@@ -3,14 +3,19 @@ from bokeh.server.server import Server
 from bokeh.application import Application
 from bokeh.application.handlers.function import FunctionHandler
 from bokeh.plotting import figure, ColumnDataSource, curdoc
-from bokeh.models import Plot, Range1d, Select, Div
+from bokeh.models import Plot, Range1d, Select, Div, FileInput
 from bokeh.layouts import row,column
 
 from tornado.ioloop import IOLoop
 
+import base64
+import cv2
+import numpy as np
+import datetime
+
 import DrawClock
 import ClockHandController
-
+import HandOffsetCalculator
 
 class BokehApp():
 
@@ -20,7 +25,7 @@ class BokehApp():
 
         io_loop = IOLoop.current()
         server = Server(applications = {
-                '/myapp': Application(FunctionHandler(self.make_document))
+                '/myapp': Application(FunctionHandler(self.make_document)),
                 }, 
             io_loop = io_loop, 
             port = 5001,
@@ -36,8 +41,20 @@ class BokehApp():
             server.stop()
             raise e
 
+
     def algoDropDownChange(self, attr, oldValue, newValue):
         self.chc.enableAlgo(newValue)
+
+
+    def onCalibrationImageUpload(self, attr, oldValue, newValue):
+        jpg_original = base64.b64decode(newValue)
+        jpg_as_np = np.frombuffer(jpg_original, dtype=np.uint8)
+        img = cv2.imdecode(jpg_as_np, flags=1)
+
+        cv2.imwrite(('calibration_images/%s.jpg' % datetime.datetime.now()).replace(':', '_'), img)
+
+        new_offsets = HandOffsetCalculator.get_hand_offsets_from_image(img)
+        self.chc.arduinoInterface.set_offsets(new_offsets)
 
 
     def make_document(self, doc):
@@ -46,20 +63,20 @@ class BokehApp():
         plot = DrawClock.create_plot()
         DrawClock.draw_full_clock_by_source(plot, source)
 
-        # self.enableButton = Button(label='Enable/Disable', button_type='success' if self.chc.clock_enabled else 'danger')
-        # self.enableButton.on_click(self.enableButton_click)
-
         algoMenu = self.chc.algorithmNames()
         self.algorithmSelector = Select(title='Display type: ', value=self.chc.currentAlgorithmName, options=algoMenu)
         self.algorithmSelector.on_change('value', self.algoDropDownChange)
 
         arduinoInterfaceContent = Div(text=self.chc.ArduinoInterfaceType())
 
+        fileInputContent = FileInput()
+        fileInputContent.on_change('value', self.onCalibrationImageUpload)
+
         def update():
             new_data_dict = DrawClock.angles_to_source_dict(self.chc.getDrawPositions())
             source.data = new_data_dict
 
-        doc.add_root(column(plot, self.algorithmSelector, arduinoInterfaceContent))
+        doc.add_root(column(plot, self.algorithmSelector, arduinoInterfaceContent, fileInputContent))
         doc.add_periodic_callback(update, 50)
         
 

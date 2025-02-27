@@ -1,4 +1,4 @@
-import BaseDisplayAlgorithm
+from . import BaseDisplayAlgorithm
 import DrawCharacters
 
 import numpy as np

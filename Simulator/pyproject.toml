@@ -12,6 +12,8 @@ bokeh = "^3.6.2"
 svglib = "^1.5.1"
 selenium = "^4.27.1"
 geckodriver = "^0.0.1"
+opencv-python = "^4.11.0.86"
+matplotlib = "^3.10.0"
 
 
 [build-system]
