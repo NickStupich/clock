@@ -37,6 +37,8 @@ else:
 
 		def set_offsets(self, new_offsets):
 			self.offsets += new_offsets
+			print('offsets: ', self.offsets)
+			
 
 		def transmitTargetPositions(self, target_angles, new_moves):
 			full_values_bytes = list(np.ascontiguousarray(target_angles + self.offsets, dtype='<i2').tobytes())

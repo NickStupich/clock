@@ -31,8 +31,6 @@ class ClockHandController(object):
 
     stop_threads_flag = False
     
-    last_target = None
-
     def __init__(self, bokehApp=None):
 
         self.bokehApp = bokehApp
@@ -116,6 +114,12 @@ class ClockHandController(object):
         self.stop_threads_flag = True
         self.targetPositionThread.join()
         self.drawPositionThread.join()
+
+
+    def set_calibration(self, new_cal):
+        self.arduinoInterface.set_offsets(new_offsets)
+        with self.lock:
+            self.arduinoInterface.transmitTargetPositions(self.target_hand_angles, self.new_moves)
 
 
     def updateTargetPositionsThreadFunc(self):
