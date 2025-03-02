@@ -33,8 +33,8 @@ class TimeDisplayAlgorithm2(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 			DrawCharacters.draw_digit(minute1, self.next_target[:, 4:6])
 			DrawCharacters.draw_digit(minute2, self.next_target[:, 6:8])
 
-			target_hand_angles[:, :, 0] += 360
-			target_hand_angles[:, :, 1] -= 360
+			self.next_target[:, :, 0] += 360
+			self.next_target[:, :, 1] -= 360
 
 			self.last_h = h
 			self.last_m = m
@@ -45,9 +45,9 @@ class TimeDisplayAlgorithm2(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 			self.first_time = False
 			return True
 
-		elif s in range(self.next_target.shape[1]):
-			target_hand_angles[:, s] = self.next_target[:,s]
-			new_move_hand_angles[:,s] = 1
+		if s in range(self.next_target.shape[1]):
+			target_hand_angles[:, s,:] = self.next_target[:,s,:]
+			new_move_hand_angles[:,s,:] = 1
 			return True
 
 		else:

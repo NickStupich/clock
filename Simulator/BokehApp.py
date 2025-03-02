@@ -29,7 +29,9 @@ class BokehApp():
                 }, 
             io_loop = io_loop, 
             port = 5001,
-            allow_websocket_origin=["localhost:5001", "10.0.0.25:5001", "10.0.0.151:5001"])
+            allow_websocket_origin=["localhost:5001", "10.0.0.25:5001", "10.0.0.151:5001"],
+	    session_token_expiration=3000,
+	    websocket_max_message_size=50*1024*1024)
         server.start()
         #server.show('/myapp')
 
@@ -47,6 +49,7 @@ class BokehApp():
 
 
     def onCalibrationImageUpload(self, attr, oldValue, newValue):
+        print('got calibration image')
         jpg_original = base64.b64decode(newValue)
         jpg_as_np = np.frombuffer(jpg_original, dtype=np.uint8)
         img = cv2.imdecode(jpg_as_np, flags=1)
