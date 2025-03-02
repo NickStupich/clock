@@ -53,8 +53,9 @@ class BokehApp():
 
         cv2.imwrite(('calibration_images/%s.jpg' % datetime.datetime.now()).replace(':', '_'), img)
 
-        new_offsets = HandOffsetCalculator.get_hand_offsets_from_image(img)
+        new_offsets,log_msg = HandOffsetCalculator.get_hand_offsets_from_image(img)
         # self.chc.arduinoInterface.set_offsets(new_offsets)
+        self.calibrationLogContent.text=log_msg
         self.chc.set_calibration(new_offsets)
 
 
@@ -73,11 +74,13 @@ class BokehApp():
         fileInputContent = FileInput()
         fileInputContent.on_change('value', self.onCalibrationImageUpload)
 
+        self.calibrationLogContent = Div(text="")
+
         def update():
             new_data_dict = DrawClock.angles_to_source_dict(self.chc.getDrawPositions())
             source.data = new_data_dict
 
-        doc.add_root(column(plot, self.algorithmSelector, arduinoInterfaceContent, fileInputContent))
+        doc.add_root(column(plot, self.algorithmSelector, arduinoInterfaceContent, fileInputContent, self.calibrationLogContent))
         doc.add_periodic_callback(update, 50)
         
 
