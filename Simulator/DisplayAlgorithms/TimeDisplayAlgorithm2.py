@@ -33,8 +33,8 @@ class TimeDisplayAlgorithm2(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 			DrawCharacters.draw_digit(minute1, self.next_target[:, 4:6])
 			DrawCharacters.draw_digit(minute2, self.next_target[:, 6:8])
 
-			angles[:, :, 0] += 360
-			angles[:, :, 1] -= 360
+			target_hand_angles[:, :, 0] += 360
+			target_hand_angles[:, :, 1] -= 360
 
 			self.last_h = h
 			self.last_m = m
