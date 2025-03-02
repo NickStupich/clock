@@ -11,7 +11,14 @@ def get_hand_offsets_from_image(img, debug=False):
 
 
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-	gray = cv2.GaussianBlur(gray, (7, 7), 1.5)
+
+	circle_downsample = 2
+	circle_img = gray[::circle_downsample, ::circle_downsample]
+
+	circle_img = cv2.GaussianBlur(circle_img, (7//circle_downsample, 7//circle_downsample), 1.5 / circle_downsample)
+	circle_img = cv2.equalizeHist(circle_img)
+	circle_img[:600//circle_downsample] = 0
+	circle_img[-600//circle_downsample] = 0
 	# print(gray.shape, gray.dtype)
 	# plt.imshow(gray); plt.show()
 	# gray = cv2.Canny(gray, 50, 60)
@@ -19,20 +26,23 @@ def get_hand_offsets_from_image(img, debug=False):
 	# rows = gray.shape[0]
 	# plt.imshow(gray); plt.show()
 
-	circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 280,
+	circles = cv2.HoughCircles(circle_img, cv2.HOUGH_GRADIENT, 1, 280//circle_downsample,
 	                           param1=50, param2=40,
-	                           minRadius=170, maxRadius=210)
+	                           minRadius=170//circle_downsample, maxRadius=210//circle_downsample)
 
 	radii = []
 	centers = []
 	if circles is not None:
-	    circles = np.uint16(np.around(circles))
-	    for i in circles[0, :]:
-	        center = (i[0], i[1])
-	        radius = i[2]
-	        radii.append(radius)
-	        centers.append(center)
+		circles = np.uint16(np.around(circles))
+		for i in circles[0, :]:
+			center = (i[0] * circle_downsample, i[1] * circle_downsample)
+			radius = i[2] * circle_downsample
+			radii.append(radius)
+			centers.append(center)
 
+			if debug:
+				color = (255,0,255)
+				cv2.circle(img, center, radius, color, 2)
 
 	radii = np.array(radii)
 	avg_radius = np.median(radii)
@@ -133,18 +143,6 @@ def get_hand_offsets_from_image(img, debug=False):
 	print('board offset angle: ', rectangle_offset_angle)
 	log_msg += "board offset angle: %f" % rectangle_offset_angle
 
-	# for i in range(centers.shape[0]):
-	# 	center = centers[i]
-	# 	d = opt_distances[i]
-	# 	if d < 20:
-	# 		color = (0, 255, 0)
-	# 		angles = get_angles_for_center(center, radii[i], gray)
-	# 		cv2.putText(img, '%.2f' % (angles[0] - rectangle_offset_angle), (center[0] + 50, center[1] -100), cv2.FONT_HERSHEY_SIMPLEX, 4, color, thickness=2)
-	# 		cv2.putText(img, '%.2f' % (angles[1] - rectangle_offset_angle), (center[0] + 50, center[1] +100), cv2.FONT_HERSHEY_SIMPLEX, 4, color, thickness=2)
-	# 	else:
-	# 		color = (255, 0, 255) 
-
-	# 	cv2.circle(img, center, radii[i], color, 3)
 
 	radius = int(avg_radius)
 	for index, center in enumerate(zip(opt_x.flatten().astype('int'), opt_y.flatten().astype('int'))):
@@ -267,14 +265,17 @@ def get_angle_for_center(center, radius, img, hand_is_bottom,debug=False):
 
 
 def test_file(test_img_fn):
+
+	debug=True
 	img = cv2.imread(test_img_fn)
 
-	offsets, log_msg = get_hand_offsets_from_image(img)
+	offsets, log_msg = get_hand_offsets_from_image(img, debug=debug)
 	print(offsets)
 	print(log_msg)
 
-	plt.imshow(img)
-	plt.show()
+	if debug:
+		plt.imshow(img)
+		plt.show()
 
 
 if __name__ == "__main__":
@@ -290,4 +291,5 @@ if __name__ == "__main__":
 		test_file(test_img_fn)
 
 	# test_file(test_img_fns[6])
+	# test_file('calibration_images/2025-03-02 10_23_08.449726.jpg')
 
