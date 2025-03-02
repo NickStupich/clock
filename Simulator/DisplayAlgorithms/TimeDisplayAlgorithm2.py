@@ -33,7 +33,8 @@ class TimeDisplayAlgorithm2(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 			DrawCharacters.draw_digit(minute1, self.next_target[:, 4:6])
 			DrawCharacters.draw_digit(minute2, self.next_target[:, 6:8])
 
-			self.add_transition_animation(self.next_target)
+			angles[:, :, 0] += 360
+			angles[:, :, 1] -= 360
 
 			self.last_h = h
 			self.last_m = m
@@ -51,11 +52,3 @@ class TimeDisplayAlgorithm2(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 
 		else:
 			return False
-
-
-	def add_transition_animation(self, angles):
-		if self.animation_counter % 2 == 0:
-			angles[:, :, 0] += 360
-			angles[:, :, 1] -= 360
-
-		self.animation_counter+=1
