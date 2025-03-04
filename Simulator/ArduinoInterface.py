@@ -33,15 +33,19 @@ else:
 			self.chc = clock_hand_controller
 			self.i2c = smbus.SMBus(1)
 			self.name = "I2C Arduino Interface"
-			self.offsets = np.zeros_like(DrawClock.clock_positions_base)
 
 		def set_offsets(self, new_offsets):
-			self.offsets += new_offsets
-			print('offsets: ', self.offsets)
-			
+			print('offset array: ', new_offsets)
+			full_values_bytes = list(np.ascontiguousarray(np.clip(new_offsets * 10, -120, 120), dtype='<i1').tobytes())
+			print('offset bytes to send: ', full_values_bytes)
+			try:
+				self.i2c.write_i2c_block_data(2, 10, full_values_bytes) #10 is the magic offset byte
+			except Exception as e:
+				print('writing to i2c: ', e)
+
 
 		def transmitTargetPositions(self, target_angles, new_moves):
-			full_values_bytes = list(np.ascontiguousarray(target_angles + self.offsets, dtype='<i2').tobytes())
+			full_values_bytes = list(np.ascontiguousarray(target_angles, dtype='<i2').tobytes())
 
 			send_indices = np.where(new_moves.flatten())[0]
 			#print('send indices: ', send_indices)

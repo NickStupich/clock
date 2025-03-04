@@ -6,7 +6,7 @@ from scipy.optimize import leastsq, minimize
 import DrawClock
 
 def get_hand_offsets_from_image(img, debug=False):
-	result = np.zeros_like(DrawClock.clock_positions_base)
+	result = np.zeros_like(DrawClock.clock_positions_base, dtype='float')
 	log_msg = ''
 
 
@@ -69,14 +69,8 @@ def get_hand_offsets_from_image(img, debug=False):
 
 		return x, y
 
-	#TODO refine pitch guess
-	if 0:
-		guess = (img.shape[1]/2, img.shape[0]/2, 2*180, 0)
-
-	else:
-		starting_circles = np.where(np.abs(radii - avg_radius) < 8)[0]
-		guess = (np.mean(centers[starting_circles,0]), np.mean(centers[starting_circles,1]), 2*avg_radius * (100 / 89), 0) #100/89 is layout ratio of board
-
+	starting_circles = np.where(np.abs(radii - avg_radius) < 8)[0]
+	guess = (np.mean(centers[starting_circles,0]), np.mean(centers[starting_circles,1]), 2*avg_radius * (100 / 89), 0) #100/89 is layout ratio of board
 	print('starting guess: ', guess)
 
 	guess_x, guess_y = grid_spots_generator(*guess)
@@ -166,11 +160,11 @@ def get_hand_offsets_from_image(img, debug=False):
 		row = index % 8
 
 		if not np.isnan(angles[1]):
-			result[col, row, 0] = int(np.round(angles[1] + rectangle_offset_angle))
+			result[col, row, 0] = angles[1] + rectangle_offset_angle
 		else:
 			log_msg += "\nFailed at (%d,%d,%d)" % (col, row,0)
 		if not np.isnan(angles[0]):
-			result[col, row, 1] = int(np.round(angles[0] + rectangle_offset_angle))
+			result[col, row, 1] = angles[0] + rectangle_offset_angle
 		else:
 			log_msg += "\nFailed at (%d,%d,%d)" % (col, row,1)
 
