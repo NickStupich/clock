@@ -7,11 +7,15 @@
 
 #include "pins_arduino.h"
 
-#define MOTOR_ROW 0
-#define MOTOR_COL 7
+#define MOTOR_ROW 1
+#define MOTOR_COL 5
+#define VERSION_STR "V2"
 
 #define MOTOR0_INDEX ((MOTOR_ROW * 8 + MOTOR_COL) * 2)
 #define MOTOR1_INDEX ((MOTOR_ROW * 8 + MOTOR_COL) * 2 + 1)
+#define CALIBRATION_CMD_VALUE  (MOTOR0_INDEX < 24 ? 10 : 11)
+#define CALIBRATION_INDEX0  (MOTOR0_INDEX % 24)
+#define CALIBRATION_INDEX1  (MOTOR1_INDEX % 24)
 
 #define PYTHON_MODULUS(n,m) (((n % m) + m) % m)  
 
@@ -45,7 +49,8 @@ AccelStepper stepper1(stepper1_bw, stepper1_fw);
 
 void setup() {
   Serial.begin(115200);
-  Serial.print("Nano started for motor [");
+  Serial.print(VERSION_STR);
+  Serial.print(" started for motor [");
   Serial.print(MOTOR_ROW);
   Serial.print(" , ");
   Serial.print(MOTOR_COL);
@@ -74,17 +79,20 @@ void i2cReceiveEvent(int howMany)
 {
   int batch_index = Wire.read();
 
-  if(howMany == 25 && batch_index == 10) //new calibration values, in 1/10ths of a degree
+  if(howMany == 25 && (batch_index == 10 || batch_index == 11)) //new calibration values, in 1/10ths of a degree
   {
     int size = Wire.readBytes(i2cReceiveBuffer, 24);
-    calibrationSteps0 += DEGREES_TO_STEPS(*(int8_t*)(&i2cReceiveBuffer[MOTOR0_INDEX])) / 10;
-    calibrationSteps1 += DEGREES_TO_STEPS(*(int8_t*)(&i2cReceiveBuffer[MOTOR1_INDEX])) / 10;
-    Serial.print("new calibration (steps): ");
-    Serial.print(calibrationSteps0);
-    Serial.print("\t");
-    Serial.print(calibrationSteps1);
-    Serial.println("");
+    if(batch_index == CALIBRATION_CMD_VALUE) {
+      calibrationSteps0 += DEGREES_TO_STEPS(*(int8_t*)(&i2cReceiveBuffer[CALIBRATION_INDEX0])) / 10;
+      calibrationSteps1 += DEGREES_TO_STEPS(*(int8_t*)(&i2cReceiveBuffer[CALIBRATION_INDEX1])) / 10;
+      //Serial.print("new calibration (steps): ");
+      //Serial.print(calibrationSteps0);
+      //Serial.print("\t");
+      //Serial.print(calibrationSteps1);
+      //Serial.println("");
   }
+    }
+    
   else if(howMany % 3 == 1) { //length 3 + cmd byte
     int size = Wire.readBytes(i2cReceiveBuffer, howMany-1);
     for(int i=0;i<size;i+=3) {
@@ -128,10 +136,10 @@ void loop(void)
   if(!running0 && lastRunning0) {
       long position0 = stepper0.currentPosition() - calibrationSteps0;
       long newPosition0 = PYTHON_MODULUS(position0, DEGREES_TO_STEPS(360));
-      Serial.print("motor 0 ");
-      Serial.print(STEPS_TO_DEGREES(position0));
-      Serial.print(" -> ");
-      Serial.println(STEPS_TO_DEGREES(newPosition0));
+      // Serial.print("motor 0 ");
+      // Serial.print(STEPS_TO_DEGREES(position0));
+      // Serial.print(" -> ");
+      // Serial.println(STEPS_TO_DEGREES(newPosition0));
       stepper0.setCurrentPosition(newPosition0 + calibrationSteps0);
   }
   lastRunning0 = running0;
@@ -139,10 +147,10 @@ void loop(void)
   if(!running1 && lastRunning1) {
       long position1 = stepper1.currentPosition() - calibrationSteps1;
       long newPosition1 = PYTHON_MODULUS(position1, DEGREES_TO_STEPS(360));
-      Serial.print("motor 1 ");
-      Serial.print(STEPS_TO_DEGREES(position1));
-      Serial.print(" -> ");
-      Serial.println(STEPS_TO_DEGREES(newPosition1));
+      // Serial.print("motor 1 ");
+      // Serial.print(STEPS_TO_DEGREES(position1));
+      // Serial.print(" -> ");
+      // Serial.println(STEPS_TO_DEGREES(newPosition1));
       stepper1.setCurrentPosition(newPosition1 + calibrationSteps1);
   }
   lastRunning1 = running1;
