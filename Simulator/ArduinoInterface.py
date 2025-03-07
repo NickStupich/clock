@@ -36,10 +36,11 @@ else:
 
 		def set_offsets(self, new_offsets):
 			print('offset array: ', new_offsets)
-			full_values_bytes = list(np.ascontiguousarray(np.clip(new_offsets * 10, -120, 120), dtype='<i1').tobytes())
+			full_values_bytes = list(np.ascontiguousarray(np.clip(-new_offsets * 10, -120, 120), dtype='<i1').tobytes())
 			print('offset bytes to send: ', full_values_bytes)
 			try:
-				self.i2c.write_i2c_block_data(2, 10, full_values_bytes) #10 is the magic offset byte
+				self.i2c.write_i2c_block_data(2, 10, full_values_bytes[:24]) #10 is the magic offset byte
+				self.i2c.write_i2c_block_data(2, 11, full_values_bytes[24:]) #11 is the magic offset byte
 			except Exception as e:
 				print('writing to i2c: ', e)
 
