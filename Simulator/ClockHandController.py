@@ -13,6 +13,8 @@ from DisplayAlgorithms import   OffDisplayAlgorithm,\
                                 TimeDisplayAlgorithm,\
                                 TimeDisplayAlgorithm2,\
                                 TimeDisplayAlgorithm3,\
+                                TimeDisplayAlgorithm4,\
+                                TimeDisplayAlgorithm5,\
                                 TextDisplayAlgorithm,\
                                 TestMotorsAlgorithm,\
                                 CalibrationDisplayAlgorithm
@@ -44,6 +46,8 @@ class ClockHandController(object):
                             'Time' : TimeDisplayAlgorithm.TimeDisplayAlgorithm(),
                             'Time2' : TimeDisplayAlgorithm2.TimeDisplayAlgorithm2(),
                             'Time3' : TimeDisplayAlgorithm3.TimeDisplayAlgorithm3(),
+                            'Time4' : TimeDisplayAlgorithm4.TimeDisplayAlgorithm4(),
+                            'Time5' : TimeDisplayAlgorithm5.TimeDisplayAlgorithm5(),
                             'Text' : TextDisplayAlgorithm.TextDisplayAlgorithm(),
                             'MotorTest' : TestMotorsAlgorithm.TestMotorsAlgorithm(),
                             'Calibration' : CalibrationDisplayAlgorithm.CalibrationDisplayAlgorithm(),
@@ -135,8 +139,8 @@ class ClockHandController(object):
 
             with self.lock:
                 self.new_moves[:,:,:] = 0
-                if self.currentAlgorithm.updateHandPositions(hour, minute, second, self.target_hand_angles, self.new_moves):         
-                    # print('new hand positions', datetime.datetime.now())
+                self.currentAlgorithm.updateHandPositions(hour, minute, second, self.target_hand_angles, self.new_moves)
+                if np.any(self.new_moves):
                     w = np.where(self.new_moves)
                     self.hand_move_in_progress[w] = 1  
                     self.arduinoInterface.transmitTargetPositions(self.target_hand_angles, self.new_moves)

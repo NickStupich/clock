@@ -27,8 +27,3 @@ class TimeDisplayAlgorithm(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 
 			self.last_h = h
 			self.last_m = m
-
-			return True
-
-		else:
-			return False

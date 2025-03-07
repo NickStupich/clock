@@ -48,11 +48,8 @@ class TimeDisplayAlgorithm3(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 			target_hand_angles[:,:] = self.next_target[:,:]
 			new_move_hand_angles[:,:,:] = 1
 			self.first_time = False
-			return True
+
 		elif s < 8:
 			move_indices = np.where(self.distances_seconds == s)
 			target_hand_angles[move_indices] = self.next_target[move_indices]
 			new_move_hand_angles[move_indices] = 1
-			return True
-		else:
-			return False

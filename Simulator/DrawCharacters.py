@@ -32,7 +32,7 @@ def draw_digit(n, angles):
         angles[2,1,0] = 270
         angles[2,1,1] = 180
 
-    elif n == 1: #TODO: should the vertical line be on the left if it's the 2nd digit?
+    elif n == 1:
         angles[0,0,0] = 315
         angles[0,0,1] = 315
         angles[0,1,0] = 0

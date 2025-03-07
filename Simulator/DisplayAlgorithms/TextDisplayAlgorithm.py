@@ -36,8 +36,3 @@ class TextDisplayAlgorithm(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 
 			self.next_index += 1
 			self.last_x = x
-
-			return True
-
-		else:
-			return False

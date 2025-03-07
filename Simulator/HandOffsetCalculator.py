@@ -112,7 +112,6 @@ def get_hand_offsets_from_image(img, debug=False):
 		d = closest_distance(centers[:,0], centers[:,1], ox, oy)
 		distances_to_fit_grid.append(d)
 
-	#TODO: error out if fit_score > 10 (ish)
 	fit_score = np.mean(distances_to_fit_grid)
 	print('distances to fit grid: ', distances_to_fit_grid, fit_score)
 
@@ -135,7 +134,6 @@ def get_hand_offsets_from_image(img, debug=False):
 	# plt.show()
 
 	rectangle_offset_angle = minimize_result.x[3]
-	# rectangle_offset_angle = 0 #TODO
 	print('board offset angle: ', rectangle_offset_angle)
 	log_msg += "board offset angle: %f" % rectangle_offset_angle
 
@@ -350,7 +348,7 @@ def get_angle_for_center(fit_center, detected_center, radius, img, hand_is_botto
 
 def test_file(test_img_fn):
 
-	debug=False
+	debug=True
 	img = cv2.imread(test_img_fn)
 
 	offsets, log_msg = get_hand_offsets_from_image(img, debug=debug)
@@ -373,10 +371,10 @@ if __name__ == "__main__":
 	test_img_fns = [os.path.join(full_dir, x) for x in os.listdir(full_dir)]
 	# test_img_fns = test_img_fns[5:6]
 
-	for test_img_fn in test_img_fns:
-		test_file(test_img_fn)
+	# for test_img_fn in test_img_fns:
+	# 	test_file(test_img_fn)
 
-	# test_file(test_img_fns[6])
+	test_file('calibration_images/2025-03-05 15_55_59.106196.jpg')
 	# test_file('calibration_images/2025-03-02 10_23_08.449726.jpg')
 
 
