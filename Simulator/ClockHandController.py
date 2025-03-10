@@ -17,6 +17,7 @@ from DisplayAlgorithms import   OffDisplayAlgorithm,\
                                 TimeDisplayAlgorithm5,\
                                 TextDisplayAlgorithm,\
                                 TestMotorsAlgorithm,\
+                                SimpleTimeAlgorithm,\
                                 CalibrationDisplayAlgorithm
 
 
@@ -32,6 +33,8 @@ class ClockHandController(object):
     hand_move_in_progress = np.zeros_like(target_hand_angles, dtype='int')
 
     stop_threads_flag = False
+
+    overnightMode = 'Minimal'
     
     def __init__(self, bokehApp=None):
 
@@ -48,6 +51,7 @@ class ClockHandController(object):
                             'Time3' : TimeDisplayAlgorithm3.TimeDisplayAlgorithm3(),
                             'Time4' : TimeDisplayAlgorithm4.TimeDisplayAlgorithm4(),
                             'Time5' : TimeDisplayAlgorithm5.TimeDisplayAlgorithm5(),
+                            'Minimal' : SimpleTimeAlgorithm.SimpleTimeAlgorithm(),
                             'Text' : TextDisplayAlgorithm.TextDisplayAlgorithm(),
                             'MotorTest' : TestMotorsAlgorithm.TestMotorsAlgorithm(),
                             'Calibration' : CalibrationDisplayAlgorithm.CalibrationDisplayAlgorithm(),
@@ -139,7 +143,15 @@ class ClockHandController(object):
 
             with self.lock:
                 self.new_moves[:,:,:] = 0
-                self.currentAlgorithm.updateHandPositions(hour, minute, second, self.target_hand_angles, self.new_moves)
+                overnight = hour in [22,23,0,1,2,3,4,5,6]
+                
+                if overnight and self.overnightMode == 'Minimal':
+                    self.algorithms_dict['Minimal'].updateHandPositions(hour, minute, second, self.target_hand_angles, self.new_moves)
+                elif overnight and self.overnightMode == 'Off':
+                    self.algorithms_dict['Off'].updateHandPositions(hour, minute, second, self.target_hand_angles, self.new_moves)
+                else:
+                    self.currentAlgorithm.updateHandPositions(hour, minute, second, self.target_hand_angles, self.new_moves)
+
                 if np.any(self.new_moves):
                     w = np.where(self.new_moves)
                     self.hand_move_in_progress[w] = 1  
@@ -162,3 +174,7 @@ class ClockHandController(object):
         self.currentAlgorithmName = algoName
         self.currentAlgorithm = self.algorithms_dict[algoName]
         self.currentAlgorithm.select()
+
+
+    def setOvernightMode(self, mode):
+        self.overnightMode = mode

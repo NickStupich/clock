@@ -48,6 +48,10 @@ class BokehApp():
         self.chc.enableAlgo(newValue)
 
 
+    def overnightModeDropDownChange(self, attr, oldValue, newValue):
+        self.chc.setOvernightMode(newValue)
+
+
     def onCalibrationImageUpload(self, attr, oldValue, newValue):
         print('got calibration image')
         jpg_original = base64.b64decode(newValue)
@@ -72,6 +76,10 @@ class BokehApp():
         self.algorithmSelector = Select(title='Display type: ', value=self.chc.currentAlgorithmName, options=algoMenu)
         self.algorithmSelector.on_change('value', self.algoDropDownChange)
 
+        overnightModes = ['Normal', 'Minimal', 'Off']
+        self.overnightModeSelector = Select(title='Overnight mode: ', value=self.chc.overnightMode, options=overnightModes)
+        self.overnightModeSelector.on_change('value', self.overnightModeDropDownChange)
+
         arduinoInterfaceContent = Div(text=self.chc.ArduinoInterfaceType())
 
         fileInputContent = FileInput()
@@ -83,7 +91,7 @@ class BokehApp():
             new_data_dict = DrawClock.angles_to_source_dict(self.chc.getDrawPositions())
             source.data = new_data_dict
 
-        doc.add_root(column(plot, self.algorithmSelector, arduinoInterfaceContent, fileInputContent, self.calibrationLogContent))
+        doc.add_root(column(plot, self.algorithmSelector, arduinoInterfaceContent, fileInputContent, self.overnightModeSelector, self.calibrationLogContent))
         doc.add_periodic_callback(update, 50)
         
 
