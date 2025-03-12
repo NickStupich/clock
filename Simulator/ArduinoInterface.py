@@ -2,7 +2,7 @@ import time
 import numpy as np
 import DrawClock
 
-MAX_I2C_WRITE_LEN = 30 #smbus limitation
+MAX_I2C_WRITE_LEN = 28 #smbus limitation
 
 try:
 	import RPi.GPIO as gpio
@@ -47,7 +47,10 @@ else:
 
 		def transmitTargetPositions(self, target_angles, new_moves):
 			full_values_bytes = list(np.ascontiguousarray(target_angles, dtype='<i2').tobytes())
-
+			speeds = np.ones(target_angles.shape, dtype='uint8')*128
+			#speeds[:,:,1] = 250
+			#speeds[:,:,0] = 12
+			speed_bytes = (speeds).tobytes()
 			send_indices = np.where(new_moves.flatten())[0]
 			#print('send indices: ', send_indices)
 
@@ -56,6 +59,7 @@ else:
 				full_encoded_send = []
 				for i in send_indices:
 					full_encoded_send.append(int(i))
+					full_encoded_send.append(speed_bytes[i])
 					full_encoded_send.append(full_values_bytes[i*2])
 					full_encoded_send.append(full_values_bytes[i*2+1])
 				
