@@ -168,6 +168,7 @@ class ClockHandController(object):
     def enableAlgo(self, algoName):
         self.currentAlgorithmName = algoName
         self.currentAlgorithm = self.algorithms_dict[algoName]
+        self.hand_speeds[:,:,:] = Constants.BASE_VELOCITY
         self.currentAlgorithm.select()
 
 
