@@ -18,7 +18,7 @@ class TimeDisplayAlgorithm2(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 		self.first_time = True
 
 
-	def updateHandPositions(self, h, m, s, target_hand_angles, new_move_hand_angles):
+	def updateHandPositions(self, h, m, s, target_hand_angles, new_move_hand_angles, hand_speeds):
 
 		if h != self.last_h or m != self.last_m:
 			hour1 = h // 10

@@ -9,7 +9,7 @@ class CalibrationDisplayAlgorithm(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 	def select(self):
 		self.needs_update = True
 
-	def updateHandPositions(self, h, m, s, target_hand_angles, new_move_hand_angles):
+	def updateHandPositions(self, h, m, s, target_hand_angles, new_move_hand_angles, hand_speeds):
 		if self.needs_update:
 			target_hand_angles[:,:,0] = 360
 			target_hand_angles[:,:,1] = 540

@@ -19,7 +19,7 @@ class TestMotorsAlgorithm(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 		self.text_lines = newText
 
 
-	def updateHandPositions(self, h, m, s, target_hand_angles, new_move_hand_angles):
+	def updateHandPositions(self, h, m, s, target_hand_angles, new_move_hand_angles, hand_speeds):
 
 		x = h * 3600 + m * 60 + s
 

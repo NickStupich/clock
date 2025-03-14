@@ -18,7 +18,7 @@ class TimeDisplayAlgorithm4(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 	def select(self):
 		self.first_time = True
 
-	def updateHandPositions(self, h, m, s, target_hand_angles, new_move_hand_angles):
+	def updateHandPositions(self, h, m, s, target_hand_angles, new_move_hand_angles, hand_speeds):
 
 		if h != self.last_h or m != self.last_m:
 			hour1 = h // 10
@@ -28,30 +28,18 @@ class TimeDisplayAlgorithm4(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 			minute2 = m % 10
 
 
-			DrawCharacters.draw_digit(hour1, self.next_target[:, 0:2])
-			DrawCharacters.draw_digit(hour2, self.next_target[:, 2:4])
-			DrawCharacters.draw_digit(minute1, self.next_target[:, 4:6])
-			DrawCharacters.draw_digit(minute2, self.next_target[:, 6:8])
+			DrawCharacters.draw_digit(hour1, target_hand_angles[:, 0:2])
+			DrawCharacters.draw_digit(hour2, target_hand_angles[:, 2:4])
+			DrawCharacters.draw_digit(minute1, target_hand_angles[:, 4:6])
+			DrawCharacters.draw_digit(minute2, target_hand_angles[:, 6:8])
 
-			self.next_target[:,:,:] += 360
+			target_hand_angles[:,:,0] -= 360
+			target_hand_angles[:,:,1] -= 720
+
+			hand_speeds[:,:,0] = 360/8
+			hand_speeds[:,:,1] = 2*360/8
+
+			new_move_hand_angles[:,:,:] = 1
 
 			self.last_h = h
 			self.last_m = m
-
-		if self.first_time: #go straight there right away
-			target_hand_angles[:,:,:] = self.next_target[:,:,:]
-			new_move_hand_angles[:,:,:] = 1
-			self.first_time = False
-
-		elif s < 8:
-			target_hand_angles[:,s,:] = self.diagonal_target[:,s,:]
-			new_move_hand_angles[:,s,:] = 1
-
-		elif 8 <= s < 12:
-			pass
-
-		elif s < 20:
-
-			target_hand_angles[:,s-12,:] = self.next_target[:,s-12,:]
-			new_move_hand_angles[:,s-12,:] = 1
-			

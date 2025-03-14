@@ -1,6 +1,7 @@
 import time
 import numpy as np
 import DrawClock
+import Constants
 
 MAX_I2C_WRITE_LEN = 28 #smbus limitation
 
@@ -16,7 +17,11 @@ if test_environment:
 		def __init__(self, clock_hand_controller):
 			self.name = "Test Arduino Interface"
 
-		def transmitTargetPositions(self, target_angles, new_moves):
+		def transmitTargetPositions(self, target_angles, new_moves, hand_speeds):
+			hand_speed_integers =(np.clip(hand_speeds, Constants.BASE_VELOCITY / 256.0, Constants.MAX_VELOCITY) / Constants.BASE_VELOCITY * Constants.BASE_VELOCITY_TRANSMIT_VALUE).astype('uint8')
+
+
+			# print(hand_speed_integers.tobytes())
 			pass
 
 		def set_offsets(self, new_offsets):
@@ -45,14 +50,12 @@ else:
 				print('writing to i2c: ', e)
 
 
-		def transmitTargetPositions(self, target_angles, new_moves):
+		def transmitTargetPositions(self, target_angles, new_moves, hand_speeds):
 			full_values_bytes = list(np.ascontiguousarray(target_angles, dtype='<i2').tobytes())
-			speeds = np.ones(target_angles.shape, dtype='uint8')*128
-			#speeds[:,:,1] = 250
-			#speeds[:,:,0] = 12
-			speed_bytes = (speeds).tobytes()
+			hand_speed_integers =(np.clip(hand_speeds, Constants.BASE_VELOCITY / 256.0, Constants.MAX_VELOCITY) / Constants.BASE_VELOCITY * Constants.BASE_VELOCITY_TRANSMIT_VALUE).astype('uint8')
+
+			speed_bytes = (hand_speed_integers).tobytes()
 			send_indices = np.where(new_moves.flatten())[0]
-			#print('send indices: ', send_indices)
 
 			if len(send_indices) > 0:
 
