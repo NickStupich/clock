@@ -1,6 +1,7 @@
 from . import BaseDisplayAlgorithm
 import DrawCharacters
-
+import numpy as np
+import Constants
 
 class TimeDisplayAlgorithm(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 	def __init__(self):
@@ -16,13 +17,31 @@ class TimeDisplayAlgorithm(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 			minute1 = m // 10
 			minute2 = m % 10
 
-			DrawCharacters.draw_digit(hour1, target_hand_angles[:, 0:2])
-			DrawCharacters.draw_digit(hour2, target_hand_angles[:, 2:4])
-			DrawCharacters.draw_digit(minute1, target_hand_angles[:, 4:6])
-			DrawCharacters.draw_digit(minute2, target_hand_angles[:, 6:8])
+			new_hand_angles = np.zeros_like(target_hand_angles)
 
-			target_hand_angles[:, :, 0] += 360
-			target_hand_angles[:, :, 1] -= 360
+			DrawCharacters.draw_digit(hour1, new_hand_angles[:, 0:2])
+			DrawCharacters.draw_digit(hour2, new_hand_angles[:, 2:4])
+			DrawCharacters.draw_digit(minute1, new_hand_angles[:, 4:6])
+			DrawCharacters.draw_digit(minute2, new_hand_angles[:, 6:8])
+
+			new_hand_angles[:,:,0] -= 360
+			new_hand_angles[:,:,1] += 360
+
+			distance_to_move = np.abs(new_hand_angles - target_hand_angles)
+			target_move_time = 13
+
+			#TODO: put this in a func somewhere
+			t = target_move_time
+			a = Constants.ACCELERATION
+			d = distance_to_move
+
+			v = (a*t - np.sqrt((t*a)**2 - 4*a*d))/2
+			hand_speeds[:,:,:] = v
+			print(v)
+
+			# hand_speeds[:,:,:] = distance_to_move / target_move_time
+
+			target_hand_angles[:,:,:] = new_hand_angles[:, :, :]
 			new_move_hand_angles[:,:,:] = 1
 
 			self.last_h = h

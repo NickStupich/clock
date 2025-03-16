@@ -21,8 +21,8 @@
 
 #define MINIMUM_DELAY 500 //Minimum delay in microsecs.
 
-#define MOTORVID28_NUM_MICROSTEPS 24
-// #define MOTORVID28_NUM_MICROSTEPS 48
+// #define MOTORVID28_NUM_MICROSTEPS 24
+#define MOTORVID28_NUM_MICROSTEPS 48
 
 class MotorVID28
 {
