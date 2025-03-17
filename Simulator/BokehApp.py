@@ -12,10 +12,12 @@ import base64
 import cv2
 import numpy as np
 import datetime
+import git
 
 import DrawClock
 import ClockHandController
 import HandOffsetCalculator
+
 
 class BokehApp():
 
@@ -53,6 +55,8 @@ class BokehApp():
 
 
     def onCalibrationImageUpload(self, attr, oldValue, newValue):
+
+        self.calibrationLogContent.text="got image"
         print('got calibration image')
         jpg_original = base64.b64decode(newValue)
         jpg_as_np = np.frombuffer(jpg_original, dtype=np.uint8)
@@ -85,13 +89,17 @@ class BokehApp():
         fileInputContent = FileInput()
         fileInputContent.on_change('value', self.onCalibrationImageUpload)
 
+        repo = git.Repo(search_parent_directories=True)
+        sha = repo.head.object.hexsha
+        gitCommitContent = Div(text='git commit: %s' % sha[:8])
+
         self.calibrationLogContent = Div(text="")
 
         def update():
             new_data_dict = DrawClock.angles_to_source_dict(self.chc.getDrawPositions())
             source.data = new_data_dict
 
-        doc.add_root(column(plot, self.algorithmSelector, arduinoInterfaceContent, fileInputContent, self.overnightModeSelector, self.calibrationLogContent))
+        doc.add_root(column(plot, self.algorithmSelector, arduinoInterfaceContent, fileInputContent, self.overnightModeSelector, self.calibrationLogContent, gitCommitContent))
         doc.add_periodic_callback(update, 50)
         
 
