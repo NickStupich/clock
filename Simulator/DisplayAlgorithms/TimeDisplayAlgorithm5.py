@@ -5,7 +5,7 @@ import DrawClock
 import numpy as np
 
 #all hands should arrive at the destination at this time
-MOVE_TIME_SECONDS = 16
+MOVE_TIME_SECONDS = 10
 
 class TimeDisplayAlgorithm5(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 	def __init__(self):
@@ -47,8 +47,14 @@ class TimeDisplayAlgorithm5(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 
 				#TODO: can we move more hands at once if we switch directions of hands?
 
-				self.move_duration_seconds[:,:,0] = np.abs(((self.next_target[:,:,0] - target_hand_angles[:,:,0])) / 45)
-				self.move_duration_seconds[:,:,1] = np.abs(((target_hand_angles[:,:,1] - self.next_target[:,:,1])) / 45)
+				self.move_duration_seconds[:,:,:] = np.abs(((self.next_target[:,:,:] - target_hand_angles[:,:,:])) / 45)
+
+				y0 = np.where(self.move_duration_seconds[:,:,0] > MOVE_TIME_SECONDS)
+				self.next_target[:,:,0][y0] -= 360
+
+				y1 = np.where(self.move_duration_seconds[:,:,1] > MOVE_TIME_SECONDS)
+				self.next_target[:,:,1][y1] += 360
+				# print(y0, y1)
 
 				# print('move duration: ', self.move_duration_seconds)
 

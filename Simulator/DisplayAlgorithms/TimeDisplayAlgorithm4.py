@@ -41,7 +41,7 @@ class TimeDisplayAlgorithm4(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 			distance_to_move = np.abs(new_hand_angles - target_hand_angles) / Constants.BASE_VELOCITY
 
 
-			target_move_time = 16
+			target_move_time = 20
 			too_far = np.where(distance_to_move > target_move_time)
 			new_hand_angles[too_far] += 360
 
@@ -55,7 +55,7 @@ class TimeDisplayAlgorithm4(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 
 			v = (a*t - np.sqrt((t*a)**2 - 4*a*d))/2
 			hand_speeds[:,:,:] = v
-			print(v)
+			# print(v)
 
 			# hand_speeds[:,:,:] = distance_to_move / target_move_time
 
