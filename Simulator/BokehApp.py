@@ -13,6 +13,7 @@ import cv2
 import numpy as np
 import datetime
 import git
+import os
 
 import DrawClock
 import ClockHandController
@@ -88,8 +89,9 @@ class BokehApp():
 
         fileInputContent = FileInput()
         fileInputContent.on_change('value', self.onCalibrationImageUpload)
-
-        repo = git.Repo(search_parent_directories=True)
+	
+        file_path = os.path.dirname(os.path.realpath(__file__))
+        repo = git.Repo(file_path, search_parent_directories=True)
         sha = repo.head.object.hexsha
         gitCommitContent = Div(text='git commit: %s' % sha[:8])
 
