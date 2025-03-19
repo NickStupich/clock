@@ -9,7 +9,7 @@
 
 #define MOTOR_ROW 2
 #define MOTOR_COL 7
-#define VERSION_STR "V4"
+#define VERSION_STR "V5"
 
 #define MOTOR0_INDEX ((MOTOR_ROW * 8 + MOTOR_COL) * 2)
 #define MOTOR1_INDEX ((MOTOR_ROW * 8 + MOTOR_COL) * 2 + 1)
@@ -30,7 +30,7 @@
 #define HAND_ACCELERATION (DEGREES_TO_STEPS(45) / (TIMER_ADJUSTMENT_FACTOR * TIMER_ADJUSTMENT_FACTOR))
 
 #define MAX_RAW_SPEED (256.0F)
-#define BASE_RAW_SPEED (128.0F)
+#define BASE_RAW_SPEED (200.0F)
 #define HAND_SPEED_RAW_TO_MULTIPLIER(raw) (raw == 0 ? MAX_RAW_SPEED / BASE_RAW_SPEED : ((float)raw) / BASE_RAW_SPEED)
 
 MotorVID28 motor0(NUM_STEPS, true, 6, 3, 5);
@@ -42,8 +42,8 @@ int target1 = 0;
 int calibrationSteps0 = 0;
 int calibrationSteps1 = 0;
 
-uint8_t speedRaw0 = 128;
-uint8_t speedRaw1 = 128;
+uint8_t speedRaw0 = BASE_RAW_SPEED;
+uint8_t speedRaw1 = BASE_RAW_SPEED;
 
 void stepper0_fw() { motor0.stepDown();}
 void stepper0_bw() { motor0.stepUp(); }
