@@ -9,7 +9,6 @@ class TimeDisplayAlgorithm4(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 	def __init__(self):
 		self.last_h = -1
 		self.last_m = -1
-		self.first_time = True
 
 		self.next_target = np.zeros_like(DrawClock.clock_positions_base)
 		self.diagonal_target = np.zeros_like(DrawClock.clock_positions_base)
@@ -17,7 +16,8 @@ class TimeDisplayAlgorithm4(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 		self.diagonal_target[:,:,1] = 135 - 180
 
 	def select(self):
-		self.first_time = True
+		self.last_h = -1
+		self.last_m = -1
 
 	def updateHandPositions(self, h, m, s, target_hand_angles, new_move_hand_angles, hand_speeds):
 
@@ -55,7 +55,7 @@ class TimeDisplayAlgorithm4(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 
 			v = (a*t - np.sqrt((t*a)**2 - 4*a*d))/2
 			hand_speeds[:,:,:] = v
-			# print(v)
+			print(v)
 
 			# hand_speeds[:,:,:] = distance_to_move / target_move_time
 

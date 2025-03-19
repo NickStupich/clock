@@ -18,8 +18,9 @@ if test_environment:
 			self.name = "Test Arduino Interface"
 
 		def transmitTargetPositions(self, target_angles, new_moves, hand_speeds):
-			hand_speed_integers =(np.clip(hand_speeds, Constants.BASE_VELOCITY / 256.0, Constants.MAX_VELOCITY) / Constants.BASE_VELOCITY * Constants.BASE_VELOCITY_TRANSMIT_VALUE).astype('uint8')
+			hand_speed_integers = np.round(np.clip(hand_speeds, Constants.MAX_VELOCITY / 256.0, Constants.MAX_VELOCITY) / Constants.BASE_VELOCITY * Constants.BASE_VELOCITY_TRANSMIT_VALUE).astype('uint8')
 
+			print(hand_speed_integers)
 
 			# print(hand_speed_integers.tobytes())
 			pass
@@ -52,7 +53,7 @@ else:
 
 		def transmitTargetPositions(self, target_angles, new_moves, hand_speeds):
 			full_values_bytes = list(np.ascontiguousarray(target_angles, dtype='<i2').tobytes())
-			hand_speed_integers =(np.clip(hand_speeds, Constants.BASE_VELOCITY / 256.0, Constants.MAX_VELOCITY) / Constants.BASE_VELOCITY * Constants.BASE_VELOCITY_TRANSMIT_VALUE).astype('uint8')
+			hand_speed_integers =(np.clip(hand_speeds, Constants.MAX_VELOCITY / 256.0, Constants.MAX_VELOCITY) / Constants.BASE_VELOCITY * Constants.BASE_VELOCITY_TRANSMIT_VALUE).astype('uint8')
 
 			speed_bytes = (hand_speed_integers).tobytes()
 			send_indices = np.where(new_moves.flatten())[0]
