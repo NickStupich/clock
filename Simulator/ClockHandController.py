@@ -16,7 +16,8 @@ from DisplayAlgorithms import   OffDisplayAlgorithm,\
                                 TextDisplayAlgorithm,\
                                 TestMotorsAlgorithm,\
                                 SimpleTimeAlgorithm,\
-                                CalibrationDisplayAlgorithm
+                                CalibrationDisplayAlgorithm,\
+                                DebugAlgorithm
 
 
 
@@ -54,6 +55,7 @@ class ClockHandController(object):
                             'Text' : TextDisplayAlgorithm.TextDisplayAlgorithm(),
                             'MotorTest' : TestMotorsAlgorithm.TestMotorsAlgorithm(),
                             'Calibration' : CalibrationDisplayAlgorithm.CalibrationDisplayAlgorithm(),
+                            'Debug' : DebugAlgorithm.DebugAlgorithm(),
                             }
 
         self.currentAlgorithmName = 'Off'                    
