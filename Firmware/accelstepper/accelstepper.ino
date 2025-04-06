@@ -9,7 +9,9 @@
 
 #define MOTOR_ROW 2
 #define MOTOR_COL 7
-#define VERSION_STR "V5"
+#define VERSION_STR "V6"
+
+#define DEBUG_PRINTS 1
 
 #define MOTOR0_INDEX ((MOTOR_ROW * 8 + MOTOR_COL) * 2)
 #define MOTOR1_INDEX ((MOTOR_ROW * 8 + MOTOR_COL) * 2 + 1)
@@ -36,24 +38,48 @@
 MotorVID28 motor0(NUM_STEPS, true, 6, 3, 5);
 MotorVID28 motor1(NUM_STEPS, true, 11, 9, 10);
 
-int target0 = 0;
-int target1 = 0;
+long target0 = 0;
+long target1 = 0;
 
-int calibrationSteps0 = 0;
-int calibrationSteps1 = 0;
+long calibrationSteps0 = 0;
+long calibrationSteps1 = 0;
 
 uint8_t speedRaw0 = BASE_RAW_SPEED;
 uint8_t speedRaw1 = BASE_RAW_SPEED;
 
-void stepper0_fw() { motor0.stepDown();}
-void stepper0_bw() { motor0.stepUp(); }
+#ifdef DEBUG_PRINTS
+  long stepUp0Count = 0;
+  long stepDown0Count = 0;
+  long stepUp1Count = 0;
+  long stepDown1Count = 0;
+#endif
 
-void stepper1_fw() { motor1.stepDown(); }
-void stepper1_bw() { motor1.stepUp(); }
+void stepper0_fw() { 
+  #ifdef DEBUG_PRINTS
+    stepDown0Count++;
+  #endif
+  motor0.stepDown();}
+
+void stepper0_bw() { 
+  #ifdef DEBUG_PRINTS
+   stepUp0Count++;
+  #endif
+motor0.stepUp(); }
+
+void stepper1_fw() { 
+  #ifdef DEBUG_PRINTS
+    stepDown1Count++;
+  #endif
+motor1.stepDown(); }
+
+void stepper1_bw() { 
+  #ifdef DEBUG_PRINTS
+    stepUp1Count++;
+  #endif
+motor1.stepUp(); }
 
 AccelStepper stepper0(stepper0_bw, stepper0_fw);
 AccelStepper stepper1(stepper1_bw, stepper1_fw);
-//unsigned long move_start_time;
 
 void setup() {
   Serial.begin(115200);
@@ -83,7 +109,6 @@ void setup() {
 
   //stepper0.moveTo(DEGREES_TO_STEPS(4*360));
   //stepper1.moveTo(DEGREES_TO_STEPS(4*360));
-  //move_start_time = millis();
 }
 
 uint8_t i2cReceiveBuffer[64];
@@ -97,11 +122,13 @@ void i2cReceiveEvent(int howMany)
     if(batch_index == CALIBRATION_CMD_VALUE) {
       calibrationSteps0 += DEGREES_TO_STEPS(*(int8_t*)(&i2cReceiveBuffer[CALIBRATION_INDEX0])) / 10;
       calibrationSteps1 += DEGREES_TO_STEPS(*(int8_t*)(&i2cReceiveBuffer[CALIBRATION_INDEX1])) / 10;
-      //Serial.print("new calibration (steps): ");
-      //Serial.print(calibrationSteps0);
-      //Serial.print("\t");
-      //Serial.print(calibrationSteps1);
-      //Serial.println("");
+      #ifdef DEBUG_PRINTS
+        Serial.print("new calibration (steps): ");
+        Serial.print(calibrationSteps0);
+        Serial.print("\t");
+        Serial.print(calibrationSteps1);
+        Serial.println("");
+      #endif
     }
   }
     
@@ -114,29 +141,39 @@ void i2cReceiveEvent(int howMany)
       int16_t *value = (int16_t*)(&i2cReceiveBuffer[i+2]);
       if(index == MOTOR0_INDEX) {
         target0 = *value;
-        //Serial.print("M0 -> ");
-        //Serial.println(target0);
+        #ifdef DEBUG_PRINTS
+          Serial.print("M0 -> ");
+          Serial.println(target0);
+        #endif
         if(newSpeedRaw != speedRaw0) {
           
           stepper0.setMaxSpeed(HAND_SPEED_BASE * HAND_SPEED_RAW_TO_MULTIPLIER(newSpeedRaw));
-          // Serial.print("new speed0: ");
-          // Serial.print(newSpeedRaw);
-          // Serial.print("\t=\t");
-          // Serial.println(HAND_SPEED_RAW_TO_MULTIPLIER(newSpeedRaw));
+          stepper0.setAcceleration(HAND_ACCELERATION);
+          #ifdef DEBUG_PRINTS
+            Serial.print("new speed0: ");
+            Serial.print(newSpeedRaw);
+            Serial.print("\t=\t");
+            Serial.println(HAND_SPEED_RAW_TO_MULTIPLIER(newSpeedRaw));
+          #endif
           speedRaw0 = newSpeedRaw;
         }
         stepper0.moveTo(DEGREES_TO_STEPS(target0) + calibrationSteps0); 
       }
       else if(index == MOTOR1_INDEX) {
         target1 = *value;
-        //Serial.print("M1 -> ");
-        //Serial.println(target1);
+        #ifdef DEBUG_PRINTS
+          Serial.print("M1 -> ");
+          Serial.println(target1);
+        #endif
         if(newSpeedRaw != speedRaw1) {
           stepper1.setMaxSpeed(HAND_SPEED_BASE * HAND_SPEED_RAW_TO_MULTIPLIER(newSpeedRaw));
-          // Serial.print("new speed1: ");
-          // Serial.print(newSpeedRaw);
-          // Serial.print("\t=\t");
-          // Serial.println(HAND_SPEED_RAW_TO_MULTIPLIER(newSpeedRaw));
+          stepper1.setAcceleration(HAND_ACCELERATION);
+          #ifdef DEBUG_PRINTS
+            Serial.print("new speed1: ");
+            Serial.print(newSpeedRaw);
+            Serial.print("\t=\t");
+            Serial.println(HAND_SPEED_RAW_TO_MULTIPLIER(newSpeedRaw));
+          #endif
           speedRaw1 = newSpeedRaw;
         }
         stepper1.moveTo(DEGREES_TO_STEPS(target1) + calibrationSteps1); 
@@ -166,23 +203,44 @@ void loop(void)
   if(!running0 && lastRunning0) {
       long position0 = stepper0.currentPosition() - calibrationSteps0;
       long newPosition0 = PYTHON_MODULUS(position0, DEGREES_TO_STEPS(360));
-      // Serial.print("motor 0 ");
-      // Serial.print(STEPS_TO_DEGREES(position0));
-      // Serial.print(" -> ");
-      // Serial.println(STEPS_TO_DEGREES(newPosition0));
+      #ifdef DEBUG_PRINTS
+        Serial.print("motor 0 ");
+        Serial.print(STEPS_TO_DEGREES(position0));
+        Serial.print(" -> ");
+        Serial.println(STEPS_TO_DEGREES(newPosition0));
+        
+        Serial.print("Cal: ");
+        Serial.println(calibrationSteps0);
+
+        Serial.print("Step counts: ");
+        Serial.print(stepUp0Count);
+        Serial.print("\t");
+        Serial.println(stepDown0Count);
+        
+        
+      #endif
       stepper0.setCurrentPosition(newPosition0 + calibrationSteps0);
-      // unsigned long move_time = (millis() - move_start_time)/TIMER_ADJUSTMENT_FACTOR;
-      // Serial.println(move_time);
   }
   lastRunning0 = running0;
   
   if(!running1 && lastRunning1) {
       long position1 = stepper1.currentPosition() - calibrationSteps1;
       long newPosition1 = PYTHON_MODULUS(position1, DEGREES_TO_STEPS(360));
-      // Serial.print("motor 1 ");
-      // Serial.print(STEPS_TO_DEGREES(position1));
-      // Serial.print(" -> ");
-      // Serial.println(STEPS_TO_DEGREES(newPosition1));
+      
+      #ifdef DEBUG_PRINTS
+        Serial.print("motor 1 ");
+        Serial.print(STEPS_TO_DEGREES(position1));
+        Serial.print(" -> ");
+        Serial.println(STEPS_TO_DEGREES(newPosition1));
+
+        Serial.print("Cal: ");
+        Serial.println(calibrationSteps1);
+        
+        Serial.print("Step counts: ");
+        Serial.print(stepUp1Count);
+        Serial.print("\t");
+        Serial.println(stepDown1Count);
+      #endif
       stepper1.setCurrentPosition(newPosition1 + calibrationSteps1);
   }
   lastRunning1 = running1;
