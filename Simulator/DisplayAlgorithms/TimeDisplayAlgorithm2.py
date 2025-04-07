@@ -8,13 +8,11 @@ class TimeDisplayAlgorithm2(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 	def __init__(self):
 		self.last_h = -1
 		self.last_m = -1
-		self.animation_counter = 0
 		self.first_time = True
 
 		self.next_target = np.zeros_like(DrawClock.clock_positions_base)
 
 	def select(self):
-		self.animation_counter = 0
 		self.first_time = True
 
 

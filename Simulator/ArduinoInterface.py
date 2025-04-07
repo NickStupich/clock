@@ -30,12 +30,20 @@ class ArduinoInterface(object):
 			except Exception as e:
 				print('writing to i2c: ', e)
 
-	def set_offsets(self, new_offsets):
+	def setCalibrationOffsets(self, new_offsets):
 		print('offset array: ', new_offsets)
 		full_values_bytes = list(np.ascontiguousarray(np.clip(-new_offsets * 10, -120, 120), dtype='<i1').tobytes())
 		print('offset bytes to send: ', full_values_bytes)
 		self.send(10, full_values_bytes[:24]) #10 is the magic offset byte
 		self.send(11, full_values_bytes[24:]) #11 is the magic offset byte
+
+
+	def setBacklashOffsets(self, new_offsets):
+		print('backlash array: ', new_offsets)
+		full_values_bytes = list(np.ascontiguousarray(np.clip(-new_offsets * 10, -120, 120), dtype='<i1').tobytes())
+		print('backlash bytes to send: ', full_values_bytes)
+		self.send(12, full_values_bytes[:24]) #12 is the magic offset byte
+		self.send(13, full_values_bytes[24:]) #13 is the magic offset byte
 
 
 	def transmitTargetPositions(self, target_angles, new_moves, hand_speeds):

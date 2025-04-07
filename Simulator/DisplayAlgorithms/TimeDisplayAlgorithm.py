@@ -8,6 +8,10 @@ class TimeDisplayAlgorithm(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 		self.last_h = -1
 		self.last_m = -1
 
+	def select(self):
+		self.last_h = -1
+		self.last_m = -1
+		
 	def updateHandPositions(self, h, m, s, target_hand_angles, new_move_hand_angles, hand_speeds):
 
 		if h != self.last_h or m != self.last_m:

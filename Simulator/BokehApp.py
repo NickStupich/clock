@@ -66,7 +66,7 @@ class BokehApp():
         cv2.imwrite(('calibration_images/%s.jpg' % datetime.datetime.now()).replace(':', '_'), img)
 
         new_offsets,log_msg = HandOffsetCalculator.get_hand_offsets_from_image(img)
-        # self.chc.arduinoInterface.set_offsets(new_offsets)
+
         self.calibrationLogContent.text=log_msg
         self.chc.set_calibration(new_offsets)
 

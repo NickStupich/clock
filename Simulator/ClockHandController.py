@@ -17,6 +17,7 @@ from DisplayAlgorithms import   OffDisplayAlgorithm,\
                                 TestMotorsAlgorithm,\
                                 SimpleTimeAlgorithm,\
                                 CalibrationDisplayAlgorithm,\
+                                BacklashDisplayAlgorithm,\
                                 DebugAlgorithm
 
 
@@ -31,6 +32,9 @@ class ClockHandController(object):
     new_moves = np.zeros_like(target_hand_angles, dtype='int')
     hand_move_in_progress = np.zeros_like(target_hand_angles, dtype='int')
     hand_speeds = np.ones_like(target_hand_angles, dtype='float') * Constants.BASE_VELOCITY
+
+    calibrationValues = np.zeros_like(target_hand_angles, dtype='float')
+    backlashValues = np.zeros_like(target_hand_angles, dtype='float')
 
     stop_threads_flag = False
 
@@ -55,6 +59,7 @@ class ClockHandController(object):
                             'Text' : TextDisplayAlgorithm.TextDisplayAlgorithm(),
                             'MotorTest' : TestMotorsAlgorithm.TestMotorsAlgorithm(),
                             'Calibration' : CalibrationDisplayAlgorithm.CalibrationDisplayAlgorithm(),
+                            'Backlash' : BacklashDisplayAlgorithm.BacklashDisplayAlgorithm(),
                             'Debug' : DebugAlgorithm.DebugAlgorithm(),
                             }
 
@@ -123,8 +128,25 @@ class ClockHandController(object):
 
     def set_calibration(self, new_cal):
         with self.lock:
-            self.arduinoInterface.set_offsets(new_cal)
-            self.arduinoInterface.transmitTargetPositions(self.target_hand_angles, np.ones_like(self.new_moves), self.hand_speeds)
+
+            if self.currentAlgorithmName == 'Calibration':
+                print('new calibration values: ', self.backlashValues)
+                self.calibrationValues = new_cal
+                self.arduinoInterface.setCalibrationOffsets(new_cal)
+                self.arduinoInterface.transmitTargetPositions(self.target_hand_angles, np.ones_like(self.new_moves), self.hand_speeds)
+
+            elif self.currentAlgorithmName == 'Backlash':
+
+                self.backlashValues = new_cal
+                print('new backlash values: ', self.backlashValues)
+                self.arduinoInterface.setBacklashOffsets(self.backlashValues)
+                self.target_hand_angles -= 360
+                self.hand_move_in_progress[:,:,:] = 1  
+                self.arduinoInterface.transmitTargetPositions(self.target_hand_angles, np.ones_like(self.new_moves), self.hand_speeds)
+
+            else:
+                print('set_calibration() called with algorithm: ', self.currentAlgorithmName)
+
 
 
     def updateTargetPositionsThreadFunc(self):
