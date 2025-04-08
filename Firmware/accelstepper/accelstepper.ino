@@ -9,13 +9,14 @@
 
 #define MOTOR_ROW 2
 #define MOTOR_COL 7
-#define VERSION_STR "V6"
+#define VERSION_STR "V7"
 
 #define DEBUG_PRINTS 1
 
 #define MOTOR0_INDEX ((MOTOR_ROW * 8 + MOTOR_COL) * 2)
 #define MOTOR1_INDEX ((MOTOR_ROW * 8 + MOTOR_COL) * 2 + 1)
 #define CALIBRATION_CMD_VALUE  (MOTOR0_INDEX < 24 ? 10 : 11)
+#define BACKLASH_CMD_VALUE  (MOTOR0_INDEX < 24 ? 12 : 13)
 #define CALIBRATION_INDEX0  (MOTOR0_INDEX % 24)
 #define CALIBRATION_INDEX1  (MOTOR1_INDEX % 24)
 
@@ -41,8 +42,17 @@ MotorVID28 motor1(NUM_STEPS, true, 11, 9, 10);
 long target0 = 0;
 long target1 = 0;
 
+//for a forward (pos -> +) move, this gets us to be lined up properly. changes with new i2c cal data
 long calibrationSteps0 = 0;
 long calibrationSteps1 = 0;
+
+//an extra offset for negative (pos -> -) move to line up properly. changes with new i2c backlash data
+long backlashSteps0 = 0;
+long backlashSteps1 = 0;
+
+//extra offset applied to the current move. changes with each new move
+long currentMoveBacklash0 = 0;
+long currentMoveBacklash1 = 0;
 
 uint8_t speedRaw0 = BASE_RAW_SPEED;
 uint8_t speedRaw1 = BASE_RAW_SPEED;
@@ -116,7 +126,7 @@ void i2cReceiveEvent(int howMany)
 {
   int batch_index = Wire.read();
 
-  if(howMany == 25 && (batch_index == 10 || batch_index == 11)) //new calibration values, in 1/10ths of a degree
+  if((howMany == 25) && (batch_index == 10 || batch_index == 11)) //new calibration values, in 1/10ths of a degree
   {
     int size = Wire.readBytes(i2cReceiveBuffer, 24);
     if(batch_index == CALIBRATION_CMD_VALUE) {
@@ -127,6 +137,22 @@ void i2cReceiveEvent(int howMany)
         Serial.print(calibrationSteps0);
         Serial.print("\t");
         Serial.print(calibrationSteps1);
+        Serial.println("");
+      #endif
+    }
+  }
+
+  else if((howMany == 25) && (batch_index == 12 || batch_index == 13)) //new backlash values, in 1/10ths of a degree
+  {
+    int size = Wire.readBytes(i2cReceiveBuffer, 24);
+    if(batch_index == BACKLASH_CMD_VALUE) {
+      backlashSteps0 += DEGREES_TO_STEPS(*(int8_t*)(&i2cReceiveBuffer[CALIBRATION_INDEX0])) / 10;
+      backlashSteps1 += DEGREES_TO_STEPS(*(int8_t*)(&i2cReceiveBuffer[CALIBRATION_INDEX1])) / 10;
+      #ifdef DEBUG_PRINTS
+        Serial.print("new backlash (steps): ");
+        Serial.print(backlashSteps0);
+        Serial.print("\t");
+        Serial.print(backlashSteps1);
         Serial.println("");
       #endif
     }
@@ -157,7 +183,10 @@ void i2cReceiveEvent(int howMany)
           #endif
           speedRaw0 = newSpeedRaw;
         }
-        stepper0.moveTo(DEGREES_TO_STEPS(target0) + calibrationSteps0); 
+
+        long newAbsolute0 = DEGREES_TO_STEPS(target0) + calibrationSteps0;
+        currentMoveBacklash0 = newAbsolute0 > stepper0.currentPosition() ? 0 : backlashSteps0;
+        stepper0.moveTo(newAbsolute0 + currentMoveBacklash0); 
       }
       else if(index == MOTOR1_INDEX) {
         target1 = *value;
@@ -176,7 +205,9 @@ void i2cReceiveEvent(int howMany)
           #endif
           speedRaw1 = newSpeedRaw;
         }
-        stepper1.moveTo(DEGREES_TO_STEPS(target1) + calibrationSteps1); 
+        long newAbsolute1 = DEGREES_TO_STEPS(target1) + calibrationSteps1;
+        currentMoveBacklash1 = newAbsolute1 > stepper1.currentPosition() ? 0 : backlashSteps1;
+        stepper1.moveTo(newAbsolute1 + currentMoveBacklash1); 
       }
     } 
   }
@@ -201,7 +232,7 @@ void loop(void)
   bool running1 = stepper1.run();
 
   if(!running0 && lastRunning0) {
-      long position0 = stepper0.currentPosition() - calibrationSteps0;
+      long position0 = stepper0.currentPosition() - calibrationSteps0 - currentMoveBacklash0;
       long newPosition0 = PYTHON_MODULUS(position0, DEGREES_TO_STEPS(360));
       #ifdef DEBUG_PRINTS
         Serial.print("motor 0 ");
@@ -219,12 +250,12 @@ void loop(void)
         
         
       #endif
-      stepper0.setCurrentPosition(newPosition0 + calibrationSteps0);
+      stepper0.setCurrentPosition(newPosition0 + calibrationSteps0 + currentMoveBacklash0);
   }
   lastRunning0 = running0;
   
   if(!running1 && lastRunning1) {
-      long position1 = stepper1.currentPosition() - calibrationSteps1;
+      long position1 = stepper1.currentPosition() - calibrationSteps1 - currentMoveBacklash1;
       long newPosition1 = PYTHON_MODULUS(position1, DEGREES_TO_STEPS(360));
       
       #ifdef DEBUG_PRINTS
@@ -241,7 +272,7 @@ void loop(void)
         Serial.print("\t");
         Serial.println(stepDown1Count);
       #endif
-      stepper1.setCurrentPosition(newPosition1 + calibrationSteps1);
+      stepper1.setCurrentPosition(newPosition1 + calibrationSteps1 + currentMoveBacklash1);
   }
   lastRunning1 = running1;
 }
