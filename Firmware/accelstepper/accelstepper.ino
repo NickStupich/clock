@@ -13,6 +13,8 @@
 
 #define DEBUG_PRINTS 1
 
+#define MOVE_TIME_PRINTS 1
+
 #define MOTOR0_INDEX ((MOTOR_ROW * 8 + MOTOR_COL) * 2)
 #define MOTOR1_INDEX ((MOTOR_ROW * 8 + MOTOR_COL) * 2 + 1)
 #define CALIBRATION_CMD_VALUE  (MOTOR0_INDEX < 24 ? 10 : 11)
@@ -38,6 +40,11 @@
 
 MotorVID28 motor0(NUM_STEPS, true, 6, 3, 5);
 MotorVID28 motor1(NUM_STEPS, true, 11, 9, 10);
+
+#if MOVE_TIME_PRINTS
+  int move0StartTimeMs = 0;
+  int move1StartTimeMs = 0;
+#endif
 
 long target0 = 0;
 long target1 = 0;
@@ -187,6 +194,10 @@ void i2cReceiveEvent(int howMany)
         long newAbsolute0 = DEGREES_TO_STEPS(target0) + calibrationSteps0;
         currentMoveBacklash0 = newAbsolute0 > stepper0.currentPosition() ? 0 : backlashSteps0;
         stepper0.moveTo(newAbsolute0 + currentMoveBacklash0); 
+                
+        #if MOVE_TIME_PRINTS
+          move0StartTimeMs = millis();
+        #endif
       }
       else if(index == MOTOR1_INDEX) {
         target1 = *value;
@@ -208,6 +219,10 @@ void i2cReceiveEvent(int howMany)
         long newAbsolute1 = DEGREES_TO_STEPS(target1) + calibrationSteps1;
         currentMoveBacklash1 = newAbsolute1 > stepper1.currentPosition() ? 0 : backlashSteps1;
         stepper1.moveTo(newAbsolute1 + currentMoveBacklash1); 
+        
+        #if MOVE_TIME_PRINTS
+          move1StartTimeMs = millis();
+        #endif
       }
     } 
   }
@@ -250,6 +265,14 @@ void loop(void)
         
         
       #endif
+    
+      #if MOVE_TIME_PRINTS
+        int move0Time = millis() - move0StartTimeMs;
+        Serial.print("Move 0 Time: ");
+        Serial.print(move0Time);
+        Serial.println(" ms");
+      #endif
+
       stepper0.setCurrentPosition(newPosition0 + calibrationSteps0 + currentMoveBacklash0);
   }
   lastRunning0 = running0;
@@ -272,6 +295,14 @@ void loop(void)
         Serial.print("\t");
         Serial.println(stepDown1Count);
       #endif
+      
+      #if MOVE_TIME_PRINTS
+        int move1Time = millis() - move1StartTimeMs;
+        Serial.print("Move 1 Time: ");
+        Serial.print(move1Time);
+        Serial.println(" ms");
+      #endif
+
       stepper1.setCurrentPosition(newPosition1 + calibrationSteps1 + currentMoveBacklash1);
   }
   lastRunning1 = running1;

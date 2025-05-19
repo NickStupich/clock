@@ -14,8 +14,7 @@ except (ImportError, RuntimeError):
 
 
 class ArduinoInterface(object):
-	def __init__(self, clock_hand_controller):
-		self.chc = clock_hand_controller
+	def __init__(self):
 		if not test_environment:
 			self.i2c = smbus.SMBus(1)
 		self.name = "Test Arduino Interface" if test_environment else "I2C Arduino Interface"

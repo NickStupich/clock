@@ -46,7 +46,7 @@ class ClockHandController(object):
         self.clock_enabled = False
         self.lock = threading.Lock()
 
-        self.arduinoInterface = ArduinoInterface.ArduinoInterface(self)
+        self.arduinoInterface = ArduinoInterface.ArduinoInterface()
 
 
         self.algorithms_dict = { 'Off' : OffDisplayAlgorithm.OffDisplayAlgorithm(),
@@ -130,9 +130,11 @@ class ClockHandController(object):
         with self.lock:
 
             if self.currentAlgorithmName == 'Calibration':
-                print('new calibration values: ', self.backlashValues)
                 self.calibrationValues = new_cal
+                print('new calibration values: ', self.calibrationValues)
                 self.arduinoInterface.setCalibrationOffsets(new_cal)
+                self.target_hand_angles += 360
+                self.hand_move_in_progress[:,:,:] = 1  
                 self.arduinoInterface.transmitTargetPositions(self.target_hand_angles, np.ones_like(self.new_moves), self.hand_speeds)
 
             elif self.currentAlgorithmName == 'Backlash':
