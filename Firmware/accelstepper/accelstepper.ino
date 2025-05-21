@@ -7,9 +7,9 @@
 
 #include "pins_arduino.h"
 
-#define MOTOR_ROW 2
-#define MOTOR_COL 7
-#define VERSION_STR "V7"
+#define MOTOR_ROW 0
+#define MOTOR_COL 0
+#define VERSION_STR "V7_Test"
 
 #define DEBUG_PRINTS 1
 
@@ -42,8 +42,8 @@ MotorVID28 motor0(NUM_STEPS, true, 6, 3, 5);
 MotorVID28 motor1(NUM_STEPS, true, 11, 9, 10);
 
 #if MOVE_TIME_PRINTS
-  int move0StartTimeMs = 0;
-  int move1StartTimeMs = 0;
+  unsigned long move0StartTimeMs = 0;
+  unsigned long move1StartTimeMs = 0;
 #endif
 
 long target0 = 0;
@@ -255,8 +255,11 @@ void loop(void)
         Serial.print(" -> ");
         Serial.println(STEPS_TO_DEGREES(newPosition0));
         
-        Serial.print("Cal: ");
+        Serial.print("Cal 0: ");
         Serial.println(calibrationSteps0);
+
+        Serial.print("Back 0: ");
+        Serial.println(backlashSteps0);
 
         Serial.print("Step counts: ");
         Serial.print(stepUp0Count);
@@ -267,9 +270,9 @@ void loop(void)
       #endif
     
       #if MOVE_TIME_PRINTS
-        int move0Time = millis() - move0StartTimeMs;
+        unsigned long move0Time = millis() - move0StartTimeMs;
         Serial.print("Move 0 Time: ");
-        Serial.print(move0Time);
+        Serial.print(move0Time/TIMER_ADJUSTMENT_FACTOR);
         Serial.println(" ms");
       #endif
 
@@ -287,8 +290,11 @@ void loop(void)
         Serial.print(" -> ");
         Serial.println(STEPS_TO_DEGREES(newPosition1));
 
-        Serial.print("Cal: ");
+        Serial.print("Cal 1: ");
         Serial.println(calibrationSteps1);
+
+        Serial.print("Back 1: ");
+        Serial.println(backlashSteps1);
         
         Serial.print("Step counts: ");
         Serial.print(stepUp1Count);
@@ -297,9 +303,9 @@ void loop(void)
       #endif
       
       #if MOVE_TIME_PRINTS
-        int move1Time = millis() - move1StartTimeMs;
+        unsigned long move1Time = millis() - move1StartTimeMs;
         Serial.print("Move 1 Time: ");
-        Serial.print(move1Time);
+        Serial.print(move1Time/TIMER_ADJUSTMENT_FACTOR);
         Serial.println(" ms");
       #endif
 
