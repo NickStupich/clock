@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "AccelStepper.h"
+#include "ClockStepper.h"
 
 #include "MotorVID28.h"
 #include "util.h"
@@ -9,7 +10,7 @@
 
 #define MOTOR_ROW 0
 #define MOTOR_COL 0
-#define VERSION_STR "V7_Test"
+#define VERSION_STR "V8"
 
 #define DEBUG_PRINTS 1
 
@@ -37,6 +38,8 @@
 #define MAX_RAW_SPEED (256.0F)
 #define BASE_RAW_SPEED (200.0F)
 #define HAND_SPEED_RAW_TO_MULTIPLIER(raw) (raw == 0 ? MAX_RAW_SPEED / BASE_RAW_SPEED : ((float)raw) / BASE_RAW_SPEED)
+
+#define USE_CUSTOM_STEPPER_CLASS 1
 
 MotorVID28 motor0(NUM_STEPS, true, 6, 3, 5);
 MotorVID28 motor1(NUM_STEPS, true, 11, 9, 10);
@@ -75,28 +78,38 @@ void stepper0_fw() {
   #ifdef DEBUG_PRINTS
     stepDown0Count++;
   #endif
-  motor0.stepDown();}
+  motor0.stepDown();
+  }
 
 void stepper0_bw() { 
   #ifdef DEBUG_PRINTS
    stepUp0Count++;
   #endif
-motor0.stepUp(); }
+  motor0.stepUp(); 
+}
 
 void stepper1_fw() { 
   #ifdef DEBUG_PRINTS
     stepDown1Count++;
   #endif
-motor1.stepDown(); }
+  motor1.stepDown(); 
+}
 
 void stepper1_bw() { 
   #ifdef DEBUG_PRINTS
     stepUp1Count++;
   #endif
-motor1.stepUp(); }
+  motor1.stepUp(); 
+}
 
-AccelStepper stepper0(stepper0_bw, stepper0_fw);
-AccelStepper stepper1(stepper1_bw, stepper1_fw);
+#if USE_CUSTOM_STEPPER_CLASS
+  ClockStepper stepper0(stepper0_bw, stepper0_fw);
+  ClockStepper stepper1(stepper1_bw, stepper1_fw);
+#else
+  AccelStepper stepper0(stepper0_bw, stepper0_fw);
+  AccelStepper stepper1(stepper1_bw, stepper1_fw);
+#endif
+
 
 void setup() {
   Serial.begin(115200);
@@ -110,7 +123,7 @@ void setup() {
   stepper0.setMaxSpeed(HAND_SPEED_BASE);
   stepper0.setAcceleration(HAND_ACCELERATION);
 
-  stepper1.setMaxSpeed(HAND_SPEED_BASE);
+  stepper0.setMaxSpeed(HAND_SPEED_BASE);
   stepper1.setAcceleration(HAND_ACCELERATION);
   
   int divisor = 1;
@@ -121,8 +134,8 @@ void setup() {
   Wire.begin(2);                // join i2c bus with address 
   Wire.onReceive(i2cReceiveEvent);  
 
-  //stepper0.moveTo(DEGREES_TO_STEPS(-179));
-  // stepper1.moveTo(DEGREES_TO_STEPS(360));
+  //stepper0.moveTo(DEGREES_TO_STEPS(360));
+  stepper1.moveTo(DEGREES_TO_STEPS(360));
 
   //stepper0.moveTo(DEGREES_TO_STEPS(4*360));
   //stepper1.moveTo(DEGREES_TO_STEPS(4*360));
@@ -241,7 +254,7 @@ bool lastRunning0 = false;
 bool lastRunning1 = false;
 void loop(void)
 {  
- // delay(1);
+ delay(1);
   
   bool running0 = stepper0.run();
   bool running1 = stepper1.run();
@@ -312,4 +325,5 @@ void loop(void)
       stepper1.setCurrentPosition(newPosition1 + calibrationSteps1 + currentMoveBacklash1);
   }
   lastRunning1 = running1;
+  
 }

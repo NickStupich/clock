@@ -153,14 +153,22 @@ void MotorVID28::stepUp()
 {
   currentStep = (currentStep + 1) % steps ;
   currentState = (currentState + 1) % stateCount;
-  writeIO();
+  //writeIO();
+  
+    analogWrite(pins[0], microStepState[(currentState+STARTINDEX_PIN1) % stateCount]);
+    analogWrite(pins[1], microStepState[(currentState+STARTINDEX_PIN23) % stateCount]);
+    analogWrite(pins[2], microStepState[(currentState+STARTINDEX_PIN4) % stateCount]);
 }
 
 void MotorVID28::stepDown()
 {
   currentStep = (currentStep + steps - 1) % steps ;
   currentState = (currentState + (stateCount - 1)) % stateCount;
-  writeIO();
+  //writeIO();
+  
+    analogWrite(pins[0], microStepState[(currentState+STARTINDEX_PIN1) % stateCount]);
+    analogWrite(pins[1], microStepState[(currentState+STARTINDEX_PIN23) % stateCount]);
+    analogWrite(pins[2], microStepState[(currentState+STARTINDEX_PIN4) % stateCount]);
 }
 
 void MotorVID28::advance()
