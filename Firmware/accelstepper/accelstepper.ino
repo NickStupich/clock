@@ -123,7 +123,9 @@ void setup() {
   stepper0.setMaxSpeed(HAND_SPEED_BASE);
   stepper0.setAcceleration(HAND_ACCELERATION);
 
-  stepper0.setMaxSpeed(HAND_SPEED_BASE);
+  //stepper1.setMaxSpeed(HAND_SPEED_BASE);
+  
+  stepper1.setMaxSpeed(HAND_SPEED_BASE);
   stepper1.setAcceleration(HAND_ACCELERATION);
   
   int divisor = 1;
@@ -134,8 +136,8 @@ void setup() {
   Wire.begin(2);                // join i2c bus with address 
   Wire.onReceive(i2cReceiveEvent);  
 
-  //stepper0.moveTo(DEGREES_TO_STEPS(360));
-  stepper1.moveTo(DEGREES_TO_STEPS(360));
+  //stepper0.moveTo(DEGREES_TO_STEPS(-1080));
+  //stepper1.moveTo(DEGREES_TO_STEPS(-720));
 
   //stepper0.moveTo(DEGREES_TO_STEPS(4*360));
   //stepper1.moveTo(DEGREES_TO_STEPS(4*360));

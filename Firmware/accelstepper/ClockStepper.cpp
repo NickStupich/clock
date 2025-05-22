@@ -16,7 +16,7 @@ void ClockStepper::setMaxSpeed(float stepsPerSecond)
 
 void ClockStepper::setAcceleration(float acceleration)
 {
-  //TODO
+  accelerationStepsPerSec2 = acceleration;
 }
 
 void ClockStepper::moveTo(long position)
@@ -60,7 +60,9 @@ void ClockStepper::moveTo(long position)
   Serial.print("distanceToStop  ");
   Serial.println(distanceToStop);
 
-  float timeAtConstantSpeed = (stepsToFinal - distanceUpToTopSpeed - distanceToStop) / currentSpeedStepsPerSec;
+  float distanceToStopAtCurrentSpeed = currentSpeedStepsPerSec * timeToStop - 0.5 * accelerationStepsPerSec2 * timeToStop * timeToStop;
+
+  float timeAtConstantSpeed = (stepsToFinal - distanceUpToTopSpeed - distanceToStop) / maxSpeedStepsPerSec;
 
   if((distanceToStop + distanceUpToTopSpeed) <= stepsToFinal) {
     Serial.println("Runs to full speed");
@@ -68,18 +70,36 @@ void ClockStepper::moveTo(long position)
     //startDecceleratingStep = targetSteps - distanceToStop;
     stopAcceleratingMicros = currentTimeMicros + timeUpToTopSpeed * 1000000;
     startDecceleratingMicros = currentTimeMicros + (timeUpToTopSpeed + timeAtConstantSpeed) * 1000000;
+    Serial.print("Stop accel @ t = ");
+    Serial.println(stopAcceleratingMicros);
+    Serial.print("Start decel @ t = ");
+    Serial.println(startDecceleratingMicros);
     accelState = ACCELERATING;
   }
-  else if (distanceToStop <= stepsToFinal) //deccelerate right away. don't worry about the overshooting trying to smoothly deccelerate, we'll just hard stop
+  else if (distanceToStopAtCurrentSpeed >= stepsToFinal) //deccelerate right away. don't worry about the overshooting trying to smoothly deccelerate, we'll just hard stop
   {
     Serial.println("Deccelerate right away");
-    accelState = ACCELERATING;
+    accelState = DECCELERATING;
 
   }
   else //need to figure out smooth accel/deccel points when it doesn't fully get up to top speed 
   {  
     Serial.println("Doesn't reach full speed");
 
+    //quadratic formula:
+    float a = accelerationStepsPerSec2;
+    float b = 2.0 * currentSpeedStepsPerSec;
+    float c = 0.5 * currentSpeedStepsPerSec * currentSpeedStepsPerSec / accelerationStepsPerSec2 - stepsToFinal;
+
+    Serial.println(currentSpeedStepsPerSec);
+    float t = (-b + sqrt(b*b-4*a*c)) / (2*a);
+    Serial.print("Stop accel at t = ");
+    Serial.println(t / TIMER_ADJUSTMENT_FACTOR);
+    Serial.println(sqrt(stepsToFinal / accelerationStepsPerSec2) / TIMER_ADJUSTMENT_FACTOR);
+
+    accelState = ACCELERATING;
+    stopAcceleratingMicros = currentTimeMicros + t * 1000000;
+    startDecceleratingMicros = currentTimeMicros + t * 1000000;
   }
 
 
@@ -132,38 +152,70 @@ bool ClockStepper::run(void)
       }
       else 
       {
-        lastStepMicros += nextStepDelayMicros; //this may be in the past, but means we don't accumulate errors
-
 
         if(accelState == ACCELERATING) {
-
+          unsigned long stateChangeDiffMicros = currentTimeMicros - stopAcceleratingMicros;
+          if(stateChangeDiffMicros < 1000000) //essentially a > 0 check for unsigned wraparound
+          {
+            accelState = CONSTANT_MOTION;
+            Serial.print("Accel -> Const @ t = ");
+            Serial.println(currentTimeMicros);
+            Serial.print("v = ");
+            Serial.println(currentSpeedStepsPerSec);
+          }
+          else
+          {
+            currentSpeedStepsPerSec += moveDirection * ((float)elapsedMicros) * accelerationStepsPerSec2 / 1000000.0;
+            if(abs(currentSpeedStepsPerSec) > maxSpeedStepsPerSec) {
+              currentSpeedStepsPerSec = moveDirection * maxSpeedStepsPerSec;
+            }
+          }
         } else if (accelState == CONSTANT_MOTION) {
 
+          unsigned long stateChangeDiffMicros = currentTimeMicros - startDecceleratingMicros;
+          if(stateChangeDiffMicros < 1000000) //essentially a > 0 check for unsigned wraparound
+          {
+            accelState = DECCELERATING;
+            Serial.print("Const -> Decel @ t = ");
+            Serial.println(currentTimeMicros);
+            Serial.print("v = ");
+            Serial.println(currentSpeedStepsPerSec);
+          }
         }
-        else if (accelState == DECCELERATING) {
+        else if (accelState == DECCELERATING) {         
+             
+            currentSpeedStepsPerSec -= moveDirection * ((float)elapsedMicros) * accelerationStepsPerSec2 / 1000000.0;
+                    
+            if(currentSteps == targetSteps) {
+              moveDirection = 0;
+              accelState = STOPPED;
+            } 
+            else if(currentSpeedStepsPerSec * moveDirection < 0) { //make sure we don't go into negative speed through weird rounding or something
+              currentSpeedStepsPerSec = 1;
+            }
+        }
 
-        }
+        
+        lastStepMicros += nextStepDelayMicros; //this may be in the past, but means we don't accumulate errors
+
         //todo: currentSpeed needs to be negative too so we can smoothly accelerate between movements in different directions
         //TODO: deccelerate
-        currentSpeedStepsPerSec += moveDirection * ((float)elapsedMicros) * accelerationStepsPerSec2 / 1000000.0;
-        if(abs(currentSpeedStepsPerSec) > maxSpeedStepsPerSec)
-        {
-          currentSpeedStepsPerSec = moveDirection * maxSpeedStepsPerSec;
-        }
+        // if(abs(currentSpeedStepsPerSec) > maxSpeedStepsPerSec)
+        // {
+        //   currentSpeedStepsPerSec = moveDirection * maxSpeedStepsPerSec;
+        // }
 
         
         //Serial.print("currentSpeedStepsPerSec: ");
         //Serial.println(currentSpeedStepsPerSec);
-  
-
+        //Serial.print(elapsedMicros);
+        //Serial.print("\t\t");
+        //Serial.println(currentSpeedStepsPerSec);
         nextStepDelayMicros = 1000000.0 / abs(currentSpeedStepsPerSec) + 0.5;//rounded to int
         nextStepDelayMicros = min(1000000, nextStepDelayMicros); //set a minimum speed to deal with very start/end of movements
       }
     }
     
-    if(currentSteps == targetSteps) {
-      moveDirection = 0;
-    }
   } 
   
   return moveDirection != 0;

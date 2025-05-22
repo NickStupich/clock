@@ -33,7 +33,7 @@ class ClockStepper
 
     float currentSpeedStepsPerSec = 0;
     unsigned long lastStepMicros = 0;
-    long nextStepDelayMicros = 0;
+    unsigned long nextStepDelayMicros = 0;
 
     //-1, +1 or 0 is stopped
     int moveDirection = 0;
