@@ -68,12 +68,15 @@ void ClockStepper::moveTo(long position)
     Serial.println("Runs to full speed");
     //stopAcceleratingStep = currentSteps + distanceUpToTopSpeed;
     //startDecceleratingStep = targetSteps - distanceToStop;
-    stopAcceleratingMicros = currentTimeMicros + timeUpToTopSpeed * 1000000;
-    startDecceleratingMicros = currentTimeMicros + (timeUpToTopSpeed + timeAtConstantSpeed) * 1000000;
+    stopAcceleratingMicros = currentTimeMicros + ((unsigned long)(timeUpToTopSpeed * 1000000));
+    startDecceleratingMicros = currentTimeMicros + ((unsigned long)((timeUpToTopSpeed + timeAtConstantSpeed) * 1000000));
     Serial.print("Stop accel @ t = ");
     Serial.println(stopAcceleratingMicros);
     Serial.print("Start decel @ t = ");
     Serial.println(startDecceleratingMicros);
+    if(startDecceleratingMicros < stopAcceleratingMicros) {
+      Serial.println("****WRAPAROUND***");
+    }
     accelState = ACCELERATING;
   }
   else if (distanceToStopAtCurrentSpeed >= stepsToFinal) //deccelerate right away. don't worry about the overshooting trying to smoothly deccelerate, we'll just hard stop

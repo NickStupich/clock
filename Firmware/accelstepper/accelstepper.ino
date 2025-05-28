@@ -8,9 +8,13 @@
 
 #include "pins_arduino.h"
 
-#define MOTOR_ROW 0
-#define MOTOR_COL 0
+#define MOTOR_ROW 2
+#define MOTOR_COL 7
 #define VERSION_STR "V8"
+
+#define ENABLE_DELAY_FOR_I2C_BATCHES
+#define I2C_MS_PER_BATCH (46)
+#define MAX_NUM_I2C_BATCHES (6)
 
 #define DEBUG_PRINTS 1
 
@@ -66,6 +70,9 @@ long currentMoveBacklash1 = 0;
 
 uint8_t speedRaw0 = BASE_RAW_SPEED;
 uint8_t speedRaw1 = BASE_RAW_SPEED;
+
+bool lastRunning0 = false;
+bool lastRunning1 = false;
 
 #ifdef DEBUG_PRINTS
   long stepUp0Count = 0;
@@ -182,6 +189,31 @@ void i2cReceiveEvent(int howMany)
     
   else if(howMany % 4 == 1) { //length 3 + cmd byte
     int size = Wire.readBytes(i2cReceiveBuffer, howMany-1);
+
+    //Doing a long delay in an ISR is obviously bad, but seems fine-ish??
+    #ifdef ENABLE_DELAY_FOR_I2C_BATCHES
+
+      bool foundRelevantIndex = false;
+      for(int i=0;i<size;i+=4) {
+        uint8_t index = i2cReceiveBuffer[i];
+        if(index == MOTOR0_INDEX || index == MOTOR1_INDEX) {
+          foundRelevantIndex = true;
+        }
+      }
+
+      if(foundRelevantIndex && !lastRunning0 && !lastRunning1) {
+        long delay_ms = (MAX_NUM_I2C_BATCHES - batch_index) * I2C_MS_PER_BATCH;
+        #ifdef DEBUG_PRINTS
+          Serial.print("Delay ");
+          Serial.print(delay_ms);
+        #endif
+        delay(delay_ms * TIMER_ADJUSTMENT_FACTOR);
+        #ifdef DEBUG_PRINTS
+          Serial.println(" Done");
+        #endif
+      }
+    #endif
+    
     for(int i=0;i<size;i+=4) {
       uint8_t index = i2cReceiveBuffer[i];
       //Serial.print(index);
@@ -252,8 +284,6 @@ void i2cReceiveEvent(int howMany)
   }
 }
 
-bool lastRunning0 = false;
-bool lastRunning1 = false;
 void loop(void)
 {  
  delay(1);
