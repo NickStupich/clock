@@ -20,7 +20,7 @@ class ArduinoInterface(object):
 		self.name = "Test Arduino Interface" if test_environment else "I2C Arduino Interface"
 
 	def send(self, index, values):
-		print('send: ', index, values)
+		# print('send: ', index, values)
 
 		if not test_environment:
 			try:

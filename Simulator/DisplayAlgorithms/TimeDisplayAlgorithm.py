@@ -2,6 +2,7 @@ from . import BaseDisplayAlgorithm
 import DrawCharacters
 import numpy as np
 import Constants
+import HandSpeed
 
 class TimeDisplayAlgorithm(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 	def __init__(self):
@@ -39,9 +40,7 @@ class TimeDisplayAlgorithm(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 			a = Constants.ACCELERATION
 			d = distance_to_move
 
-			v = (a*t - np.sqrt((t*a)**2 - 4*a*d))/2
-			hand_speeds[:,:,:] = v
-			print(v)
+			hand_speeds[:,:,:] = HandSpeed.CalculateHandSpeeds(t = t, d = distance_to_move)
 
 			# hand_speeds[:,:,:] = distance_to_move / target_move_time
 

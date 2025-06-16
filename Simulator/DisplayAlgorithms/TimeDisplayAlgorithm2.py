@@ -1,8 +1,13 @@
 from . import BaseDisplayAlgorithm
 import DrawCharacters
 import DrawClock
+import Constants
+import HandSpeed
 
 import numpy as np
+
+MOVE_TIME_SECONDS = 12
+MAX_BASE_MOVE_TIME_OFFSET_SECONDS = 2
 
 class TimeDisplayAlgorithm2(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 	def __init__(self):
@@ -11,6 +16,10 @@ class TimeDisplayAlgorithm2(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 		self.first_time = True
 
 		self.next_target = np.zeros_like(DrawClock.clock_positions_base)
+
+		self.target_times_seconds = np.zeros_like(DrawClock.clock_positions_base)
+		for i in range(8):
+			self.target_times_seconds[:,i,:] = MOVE_TIME_SECONDS - i
 
 	def select(self):
 		self.first_time = True
@@ -34,6 +43,15 @@ class TimeDisplayAlgorithm2(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 			self.next_target[:, :, 0] += 360
 			self.next_target[:, :, 1] -= 360
 
+
+			base_move_duration_seconds = np.abs(((self.next_target[:,:,:] - target_hand_angles[:,:,:])) / Constants.BASE_VELOCITY)
+			y0 = np.where(base_move_duration_seconds[:,:,0] > (self.target_times_seconds[:,:,0]+MAX_BASE_MOVE_TIME_OFFSET_SECONDS))
+			self.next_target[:,:,0][y0] -= 360
+			y1 = np.where(base_move_duration_seconds[:,:,1] > (self.target_times_seconds[:,:,1]+MAX_BASE_MOVE_TIME_OFFSET_SECONDS))
+			self.next_target[:,:,1][y1] += 360
+
+			self.next_hand_speeds = HandSpeed.CalculateHandSpeeds(t = self.target_times_seconds, d = self.next_target - target_hand_angles)
+
 			self.last_h = h
 			self.last_m = m
 
@@ -45,3 +63,4 @@ class TimeDisplayAlgorithm2(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 		if s in range(self.next_target.shape[1]):
 			target_hand_angles[:, s,:] = self.next_target[:,s,:]
 			new_move_hand_angles[:,s,:] = 1
+			hand_speeds[:,s,:] = self.next_hand_speeds[:,s,:]
