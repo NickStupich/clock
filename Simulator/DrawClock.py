@@ -172,6 +172,7 @@ def create_plot():
     plot = Plot(
             title=None, width=plot_width, height=plot_height,
             min_border=0, toolbar_location=None,
+            output_backend="webgl",
             x_range=Range1d(0, plot_width), y_range=Range1d(0, plot_height))
 
     return plot

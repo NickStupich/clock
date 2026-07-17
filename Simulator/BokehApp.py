@@ -34,7 +34,7 @@ class BokehApp():
             port = 5001,
             allow_websocket_origin=["localhost:5001", "10.0.0.25:5001", "10.0.0.151:5001"],
 	    session_token_expiration=3000,
-	    websocket_max_message_size=50*1024*1024)
+	    websocket_max_message_size=1*1024*1024)
         server.start()
         #server.show('/myapp')
 
@@ -102,7 +102,7 @@ class BokehApp():
             source.data = new_data_dict
 
         doc.add_root(column(plot, self.algorithmSelector, arduinoInterfaceContent, fileInputContent, self.overnightModeSelector, self.calibrationLogContent, gitCommitContent))
-        doc.add_periodic_callback(update, 50)
+        doc.add_periodic_callback(update, 200)
         
 
 if __name__ == '__main__':
