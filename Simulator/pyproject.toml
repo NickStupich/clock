@@ -1,23 +1,20 @@
-[tool.poetry]
+[project]
 name = "clock"
 version = "0.1.0"
 description = ""
-authors = ["Your Name <you@example.com>"]
 readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "tornado>=6.4.2",
+    "bokeh>=3.6.2",
+    "svglib>=1.5.1",
+    "selenium>=4.27.1",
+    "geckodriver>=0.0.1",
+    "opencv-python>=4.11.0.86",
+    "matplotlib>=3.10.0",
+    "scipy>=1.15.2",
+    "gitpython>=3.1.44",
+]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-tornado = "^6.4.2"
-bokeh = "^3.6.2"
-svglib = "^1.5.1"
-selenium = "^4.27.1"
-geckodriver = "^0.0.1"
-opencv-python = "^4.11.0.86"
-matplotlib = "^3.10.0"
-scipy = "^1.15.2"
-gitpython = "^3.1.44"
-
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.uv]
+package = false
