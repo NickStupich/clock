@@ -136,6 +136,7 @@ class ClockHandController(object):
                 self.target_hand_angles += 360
                 self.hand_move_in_progress[:,:,:] = 1  
                 self.arduinoInterface.transmitTargetPositions(self.target_hand_angles, np.ones_like(self.new_moves), self.hand_speeds)
+                self.arduinoInterface.triggerHandMoves()
 
             elif self.currentAlgorithmName == 'Backlash':
 
@@ -145,6 +146,7 @@ class ClockHandController(object):
                 self.target_hand_angles -= 360
                 self.hand_move_in_progress[:,:,:] = 1  
                 self.arduinoInterface.transmitTargetPositions(self.target_hand_angles, np.ones_like(self.new_moves), self.hand_speeds)
+                self.arduinoInterface.triggerHandMoves()
 
             else:
                 print('set_calibration() called with algorithm: ', self.currentAlgorithmName)

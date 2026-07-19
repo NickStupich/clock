@@ -10,7 +10,7 @@
 
 #define MOTOR_ROW 2
 #define MOTOR_COL 7
-#define VERSION_STR "V9"
+#define VERSION_STR "V10"
 
 #define DEBUG_PRINTS 1
 
@@ -44,11 +44,11 @@
 MotorVID28 motor0(NUM_STEPS, true, 6, 3, 5);
 MotorVID28 motor1(NUM_STEPS, true, 11, 9, 10);
 
-float stepper0NewSpeed = 0;
+float stepper0NewSpeedRaw = 0;
 float stepper0NewPosition = 0;
 bool stepper0HasNewValues = false;
 
-float stepper1NewSpeed = 0;
+float stepper1NewSpeedRaw = 0;
 float stepper1NewPosition = 0;
 bool stepper1HasNewValues = false;
 
@@ -192,11 +192,22 @@ void i2cReceiveEvent(int howMany)
   }
   else if(batch_index == 20) //GO! trigger
   {
+    
+    int size = Wire.readBytes(i2cReceiveBuffer, howMany-1);
+    Serial.println("Trigger");
     if(stepper0HasNewValues)
     {
-      stepper0.setMaxSpeed(stepper0NewSpeed);
-      stepper0.setAcceleration(HAND_ACCELERATION);
-      
+        if(stepper0NewSpeedRaw != speedRaw0) {                    
+          stepper0.setMaxSpeed(HAND_SPEED_BASE * HAND_SPEED_RAW_TO_MULTIPLIER(stepper0NewSpeedRaw));
+          stepper0.setAcceleration(HAND_ACCELERATION);
+          #ifdef DEBUG_PRINTS
+            Serial.print("new speed0: ");
+            Serial.print(stepper0NewSpeedRaw);
+            Serial.print("\t=\t");
+            Serial.println(HAND_SPEED_RAW_TO_MULTIPLIER(stepper0NewSpeedRaw));
+          #endif
+          speedRaw0 = stepper0NewSpeedRaw;
+        }
       float currentMoveBacklash0 = stepper0NewPosition > stepper0.currentPosition() ? 0 : backlashSteps0;     
       stepper0.moveTo(stepper0NewPosition);
       stepper0HasNewValues = false;
@@ -209,8 +220,17 @@ void i2cReceiveEvent(int howMany)
     
     if(stepper1HasNewValues)
     {
-      stepper1.setMaxSpeed(stepper1NewSpeed);
-      stepper1.setAcceleration(HAND_ACCELERATION);
+        if(stepper1NewSpeedRaw != speedRaw1) {                    
+          stepper1.setMaxSpeed(HAND_SPEED_BASE * HAND_SPEED_RAW_TO_MULTIPLIER(stepper1NewSpeedRaw));
+          stepper1.setAcceleration(HAND_ACCELERATION);
+          #ifdef DEBUG_PRINTS
+            Serial.print("new speed1: ");
+            Serial.print(stepper1NewSpeedRaw);
+            Serial.print("\t=\t");
+            Serial.println(HAND_SPEED_RAW_TO_MULTIPLIER(stepper1NewSpeedRaw));
+          #endif
+          speedRaw1 = stepper1NewSpeedRaw;
+        }
 
       float currentMoveBacklash1 = stepper1NewPosition > stepper1.currentPosition() ? 0 : backlashSteps1;
 
@@ -236,19 +256,8 @@ void i2cReceiveEvent(int howMany)
           Serial.print("M0 -> ");
           Serial.println(target0);
         #endif
-        if(newSpeedRaw != speedRaw0) {
-          
-          stepper0NewSpeed = HAND_SPEED_BASE * HAND_SPEED_RAW_TO_MULTIPLIER(newSpeedRaw);
-          
-          #ifdef DEBUG_PRINTS
-            Serial.print("new speed0: ");
-            Serial.print(newSpeedRaw);
-            Serial.print("\t=\t");
-            Serial.println(HAND_SPEED_RAW_TO_MULTIPLIER(newSpeedRaw));
-          #endif
-          speedRaw0 = newSpeedRaw;
-        }
-        
+        stepper0NewSpeedRaw = newSpeedRaw;
+                
         stepper0HasNewValues = true;   
         stepper0NewPosition = DEGREES_TO_STEPS(target0) + calibrationSteps0;              
       }
@@ -258,17 +267,9 @@ void i2cReceiveEvent(int howMany)
           Serial.print("M1 -> ");
           Serial.println(target1);
         #endif
-        if(newSpeedRaw != speedRaw1) {          
-          stepper1NewSpeed = HAND_SPEED_BASE * HAND_SPEED_RAW_TO_MULTIPLIER(newSpeedRaw);
-          
-          #ifdef DEBUG_PRINTS
-            Serial.print("new speed1: ");
-            Serial.print(newSpeedRaw);
-            Serial.print("\t=\t");
-            Serial.println(HAND_SPEED_RAW_TO_MULTIPLIER(newSpeedRaw));
-          #endif
-          speedRaw1 = newSpeedRaw;
-        }
+        
+        stepper1NewSpeedRaw = newSpeedRaw;
+        
         stepper1NewPosition = DEGREES_TO_STEPS(target1) + calibrationSteps1;
         stepper1HasNewValues = true;   
       }
