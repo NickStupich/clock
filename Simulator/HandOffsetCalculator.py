@@ -3,10 +3,21 @@ import datetime
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.optimize import leastsq, minimize, curve_fit
+from scipy.optimize import minimize
 import os
 
 import DrawClock
+
+
+def _parabolic_subpixel_peak(y_before, y_center, y_after, x):
+	# Closed-form 3-point parabolic subpixel peak interpolation.
+	# Much faster than fitting a Gaussian with scipy.optimize.curve_fit
+	# (which requires an iterative nonlinear solve) and gives an equivalent
+	# result for the sharp, well-sampled peaks produced by the edge diff profile.
+	denom = y_before - 2 * y_center + y_after
+	if denom == 0:
+		return float(x)
+	return x + 0.5 * (y_before - y_after) / denom
 
 def get_hand_offsets_from_image(img, debug=False):
 	result = np.zeros_like(DrawClock.clock_positions_base, dtype='float')
@@ -22,6 +33,8 @@ def get_hand_offsets_from_image(img, debug=False):
 	circle_img = cv2.equalizeHist(circle_img)
 	circle_img[:600//circle_downsample] = 0
 	circle_img[-600//circle_downsample] = 0
+
+
 	# print(gray.shape, gray.dtype)
 	# plt.imshow(gray); plt.show()
 	# gray = cv2.Canny(gray, 50, 60)
@@ -236,29 +249,8 @@ def get_angle_for_center(fit_center, detected_center, radius, img, hand_is_botto
 			return np.nan
 
 		if refine_peaks:
-			def gauss(x, *p):
-			    A, mu, sigma = p
-			    return A*np.exp(-(x-mu)**2/(2.*sigma**2))
-
-			flat_diff_profile = diff_profile - np.median(diff_profile)
-			p0 = (diff_profile[x], x, 1)
-
-			coeff, var_matrix = curve_fit(gauss, np.arange(0, len(diff_profile)), diff_profile, p0=p0)
-			# print('x, coeffs:  ', x, coeff)
-			x_refined = coeff[1]
-
-
-			flat_diff_profile2 = diff_profile2 - np.median(diff_profile2)
-			p02 = (diff_profile2[x2], x2, 1)
-
-			try:
-				coeff2, var_matrix2 = curve_fit(gauss, np.arange(0, len(diff_profile2)), diff_profile2, p0=p02)
-				# print('x, coeffs:  ', x2, coeff2)
-				x_refined2 = coeff2[1]
-			except Exception:
-				print(x2, diff_profile2)
-				plt.plot(diff_profile2)
-				plt.show()
+			x_refined = _parabolic_subpixel_peak(diff_profile[x-1], diff_profile[x], diff_profile[x+1], x)
+			x_refined2 = _parabolic_subpixel_peak(diff_profile2[x2-1], diff_profile2[x2], diff_profile2[x2+1], x2)
 
 		edge_xs.append(y)
 		if refine_peaks:
