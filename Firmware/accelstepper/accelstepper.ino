@@ -10,11 +10,7 @@
 
 #define MOTOR_ROW 2
 #define MOTOR_COL 7
-#define VERSION_STR "V8"
-
-#define ENABLE_DELAY_FOR_I2C_BATCHES
-#define I2C_MS_PER_BATCH (46)
-#define MAX_NUM_I2C_BATCHES (6)
+#define VERSION_STR "V9"
 
 #define DEBUG_PRINTS 1
 
@@ -47,6 +43,14 @@
 
 MotorVID28 motor0(NUM_STEPS, true, 6, 3, 5);
 MotorVID28 motor1(NUM_STEPS, true, 11, 9, 10);
+
+float stepper0NewSpeed = 0;
+float stepper0NewPosition = 0;
+bool stepper0HasNewValues = false;
+
+float stepper1NewSpeed = 0;
+float stepper1NewPosition = 0;
+bool stepper1HasNewValues = false;
 
 #if MOVE_TIME_PRINTS
   unsigned long move0StartTimeMs = 0;
@@ -186,37 +190,44 @@ void i2cReceiveEvent(int howMany)
       #endif
     }
   }
+  else if(batch_index == 20) //GO! trigger
+  {
+    if(stepper0HasNewValues)
+    {
+      stepper0.setMaxSpeed(stepper0NewSpeed);
+      stepper0.setAcceleration(HAND_ACCELERATION);
+      
+      float currentMoveBacklash0 = stepper0NewPosition > stepper0.currentPosition() ? 0 : backlashSteps0;     
+      stepper0.moveTo(stepper0NewPosition);
+      stepper0HasNewValues = false;
+      
+      #if MOVE_TIME_PRINTS
+        move0StartTimeMs = millis();
+      #endif
+    }
+
+    
+    if(stepper1HasNewValues)
+    {
+      stepper1.setMaxSpeed(stepper1NewSpeed);
+      stepper1.setAcceleration(HAND_ACCELERATION);
+
+      float currentMoveBacklash1 = stepper1NewPosition > stepper1.currentPosition() ? 0 : backlashSteps1;
+
+      stepper1.moveTo(stepper1NewPosition + currentMoveBacklash1);
+      stepper1HasNewValues = false;
+      
+      #if MOVE_TIME_PRINTS
+        move1StartTimeMs = millis();
+      #endif
+    }
+  }
     
   else if(howMany % 4 == 1) { //length 3 + cmd byte
     int size = Wire.readBytes(i2cReceiveBuffer, howMany-1);
 
-    //Doing a long delay in an ISR is obviously bad, but seems fine-ish??
-    #ifdef ENABLE_DELAY_FOR_I2C_BATCHES
-
-      bool foundRelevantIndex = false;
-      for(int i=0;i<size;i+=4) {
-        uint8_t index = i2cReceiveBuffer[i];
-        if(index == MOTOR0_INDEX || index == MOTOR1_INDEX) {
-          foundRelevantIndex = true;
-        }
-      }
-
-      if(foundRelevantIndex && !lastRunning0 && !lastRunning1) {
-        long delay_ms = (MAX_NUM_I2C_BATCHES - batch_index) * I2C_MS_PER_BATCH;
-        #ifdef DEBUG_PRINTS
-          Serial.print("Delay ");
-          Serial.print(delay_ms);
-        #endif
-        delay(delay_ms * TIMER_ADJUSTMENT_FACTOR);
-        #ifdef DEBUG_PRINTS
-          Serial.println(" Done");
-        #endif
-      }
-    #endif
-    
     for(int i=0;i<size;i+=4) {
       uint8_t index = i2cReceiveBuffer[i];
-      //Serial.print(index);
       uint8_t newSpeedRaw = i2cReceiveBuffer[i+1];
       int16_t *value = (int16_t*)(&i2cReceiveBuffer[i+2]);
       if(index == MOTOR0_INDEX) {
@@ -227,8 +238,8 @@ void i2cReceiveEvent(int howMany)
         #endif
         if(newSpeedRaw != speedRaw0) {
           
-          stepper0.setMaxSpeed(HAND_SPEED_BASE * HAND_SPEED_RAW_TO_MULTIPLIER(newSpeedRaw));
-          stepper0.setAcceleration(HAND_ACCELERATION);
+          stepper0NewSpeed = HAND_SPEED_BASE * HAND_SPEED_RAW_TO_MULTIPLIER(newSpeedRaw);
+          
           #ifdef DEBUG_PRINTS
             Serial.print("new speed0: ");
             Serial.print(newSpeedRaw);
@@ -237,14 +248,9 @@ void i2cReceiveEvent(int howMany)
           #endif
           speedRaw0 = newSpeedRaw;
         }
-
-        long newAbsolute0 = DEGREES_TO_STEPS(target0) + calibrationSteps0;
-        currentMoveBacklash0 = newAbsolute0 > stepper0.currentPosition() ? 0 : backlashSteps0;
-        stepper0.moveTo(newAbsolute0 + currentMoveBacklash0); 
-                
-        #if MOVE_TIME_PRINTS
-          move0StartTimeMs = millis();
-        #endif
+        
+        stepper0HasNewValues = true;   
+        stepper0NewPosition = DEGREES_TO_STEPS(target0) + calibrationSteps0;              
       }
       else if(index == MOTOR1_INDEX) {
         target1 = *value;
@@ -252,9 +258,9 @@ void i2cReceiveEvent(int howMany)
           Serial.print("M1 -> ");
           Serial.println(target1);
         #endif
-        if(newSpeedRaw != speedRaw1) {
-          stepper1.setMaxSpeed(HAND_SPEED_BASE * HAND_SPEED_RAW_TO_MULTIPLIER(newSpeedRaw));
-          stepper1.setAcceleration(HAND_ACCELERATION);
+        if(newSpeedRaw != speedRaw1) {          
+          stepper1NewSpeed = HAND_SPEED_BASE * HAND_SPEED_RAW_TO_MULTIPLIER(newSpeedRaw);
+          
           #ifdef DEBUG_PRINTS
             Serial.print("new speed1: ");
             Serial.print(newSpeedRaw);
@@ -263,13 +269,8 @@ void i2cReceiveEvent(int howMany)
           #endif
           speedRaw1 = newSpeedRaw;
         }
-        long newAbsolute1 = DEGREES_TO_STEPS(target1) + calibrationSteps1;
-        currentMoveBacklash1 = newAbsolute1 > stepper1.currentPosition() ? 0 : backlashSteps1;
-        stepper1.moveTo(newAbsolute1 + currentMoveBacklash1); 
-        
-        #if MOVE_TIME_PRINTS
-          move1StartTimeMs = millis();
-        #endif
+        stepper1NewPosition = DEGREES_TO_STEPS(target1) + calibrationSteps1;
+        stepper1HasNewValues = true;   
       }
     } 
   }

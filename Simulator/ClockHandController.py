@@ -153,6 +153,8 @@ class ClockHandController(object):
 
     def updateTargetPositionsThreadFunc(self):
         interval_seconds = 1.0
+        trigger_move_second_offset = 0.5 #hands get triggered at 1.5s, 2.5s, 3.5s etc
+        
         starttime = time.monotonic()
         while not self.stop_threads_flag:
             cur_time = datetime.datetime.now()
@@ -177,6 +179,9 @@ class ClockHandController(object):
                     w = np.where(self.new_moves)
                     self.hand_move_in_progress[w] = 1  
                     self.arduinoInterface.transmitTargetPositions(self.target_hand_angles, self.new_moves, self.hand_speeds)
+
+                    time.sleep(trigger_move_second_offset - ((time.monotonic() - starttime) % trigger_move_second_offset))
+                    self.arduinoInterface.triggerHandMoves()
 
             time.sleep(interval_seconds - ((time.monotonic() - starttime) % interval_seconds))
 

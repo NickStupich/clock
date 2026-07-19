@@ -64,7 +64,11 @@ class ArduinoInterface(object):
 			for batch_index, batch_start in enumerate(range(0, len(full_encoded_send), MAX_I2C_WRITE_LEN)):
 				batch = full_encoded_send[batch_start: batch_start + MAX_I2C_WRITE_LEN]
 				self.send(batch_index, batch)
+
 				
+	def triggerHandMoves(self):
+		self.send(20, [1]) #20 is the magic trigger byte
+
 
 if __name__ == "__main__":
     ai = ArduinoInterface(None)
