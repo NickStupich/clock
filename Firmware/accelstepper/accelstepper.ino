@@ -10,7 +10,7 @@
 
 #define MOTOR_ROW 2
 #define MOTOR_COL 7
-#define VERSION_STR "V10"
+#define VERSION_STR "V11"
 
 #define DEBUG_PRINTS 1
 
@@ -133,8 +133,6 @@ void setup() {
 
   stepper0.setMaxSpeed(HAND_SPEED_BASE);
   stepper0.setAcceleration(HAND_ACCELERATION);
-
-  //stepper1.setMaxSpeed(HAND_SPEED_BASE);
   
   stepper1.setMaxSpeed(HAND_SPEED_BASE);
   stepper1.setAcceleration(HAND_ACCELERATION);
@@ -146,12 +144,6 @@ void setup() {
   
   Wire.begin(2);                // join i2c bus with address 
   Wire.onReceive(i2cReceiveEvent);  
-
-  //stepper0.moveTo(DEGREES_TO_STEPS(-1080));
-  //stepper1.moveTo(DEGREES_TO_STEPS(-720));
-
-  //stepper0.moveTo(DEGREES_TO_STEPS(4*360));
-  //stepper1.moveTo(DEGREES_TO_STEPS(4*360));
 }
 
 uint8_t i2cReceiveBuffer[64];
@@ -208,7 +200,7 @@ void i2cReceiveEvent(int howMany)
           #endif
           speedRaw0 = stepper0NewSpeedRaw;
         }
-      float currentMoveBacklash0 = stepper0NewPosition > stepper0.currentPosition() ? 0 : backlashSteps0;     
+      currentMoveBacklash0 = stepper0NewPosition > stepper0.currentPosition() ? 0 : backlashSteps0;     
       stepper0.moveTo(stepper0NewPosition);
       stepper0HasNewValues = false;
       
@@ -232,7 +224,7 @@ void i2cReceiveEvent(int howMany)
           speedRaw1 = stepper1NewSpeedRaw;
         }
 
-      float currentMoveBacklash1 = stepper1NewPosition > stepper1.currentPosition() ? 0 : backlashSteps1;
+      currentMoveBacklash1 = stepper1NewPosition > stepper1.currentPosition() ? 0 : backlashSteps1;
 
       stepper1.moveTo(stepper1NewPosition + currentMoveBacklash1);
       stepper1HasNewValues = false;
