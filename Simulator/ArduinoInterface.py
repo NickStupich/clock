@@ -3,7 +3,7 @@ import numpy as np
 import DrawClock
 import Constants
 
-MAX_I2C_WRITE_LEN = 28 #smbus limitation
+MAX_I2C_WRITE_LEN = 25 #actually an smbus limitation of 28, but need to be divisible by 5
 
 try:
 	import RPi.GPIO as gpio
@@ -47,8 +47,8 @@ class ArduinoInterface(object):
 
 	def transmitTargetPositions(self, target_angles, new_moves, hand_speeds):
 		full_values_bytes = list(np.ascontiguousarray(target_angles, dtype='<i2').tobytes())
-		hand_speed_integers =(np.clip(hand_speeds, Constants.MAX_VELOCITY / 256.0, Constants.MAX_VELOCITY) / Constants.BASE_VELOCITY * Constants.BASE_VELOCITY_TRANSMIT_VALUE).astype('uint8')
-
+		hand_speed_integers =(np.clip(hand_speeds, Constants.MAX_VELOCITY / 65536.0, Constants.MAX_VELOCITY) / Constants.BASE_VELOCITY * Constants.BASE_VELOCITY_TRANSMIT_VALUE).astype('uint16')
+		# print('hand_speed_integers: ', hand_speed_integers)
 		speed_bytes = (hand_speed_integers).tobytes()
 		send_indices = np.where(new_moves.flatten())[0]
 
@@ -57,7 +57,8 @@ class ArduinoInterface(object):
 			full_encoded_send = []
 			for i in send_indices:
 				full_encoded_send.append(int(i))
-				full_encoded_send.append(speed_bytes[i])
+				full_encoded_send.append(speed_bytes[i*2])
+				full_encoded_send.append(speed_bytes[i*2+1])
 				full_encoded_send.append(full_values_bytes[i*2])
 				full_encoded_send.append(full_values_bytes[i*2+1])
 			

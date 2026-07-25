@@ -35,8 +35,8 @@
 #define HAND_SPEED_BASE (DEGREES_TO_STEPS(360) / 8.0 / TIMER_ADJUSTMENT_FACTOR)
 #define HAND_ACCELERATION (DEGREES_TO_STEPS(45) / (TIMER_ADJUSTMENT_FACTOR * TIMER_ADJUSTMENT_FACTOR))
 
-#define MAX_RAW_SPEED (256.0F)
-#define BASE_RAW_SPEED (200.0F)
+#define MAX_RAW_SPEED (65536.0F)
+#define BASE_RAW_SPEED (30000.0F)
 #define HAND_SPEED_RAW_TO_MULTIPLIER(raw) (raw == 0 ? MAX_RAW_SPEED / BASE_RAW_SPEED : ((float)raw) / BASE_RAW_SPEED)
 
 #define USE_CUSTOM_STEPPER_CLASS 1
@@ -72,8 +72,8 @@ long backlashSteps1 = 0;
 long currentMoveBacklash0 = 0;
 long currentMoveBacklash1 = 0;
 
-uint8_t speedRaw0 = BASE_RAW_SPEED;
-uint8_t speedRaw1 = BASE_RAW_SPEED;
+uint16_t speedRaw0 = BASE_RAW_SPEED;
+uint16_t speedRaw1 = BASE_RAW_SPEED;
 
 bool lastRunning0 = false;
 bool lastRunning1 = false;
@@ -201,7 +201,7 @@ void i2cReceiveEvent(int howMany)
           speedRaw0 = stepper0NewSpeedRaw;
         }
       currentMoveBacklash0 = stepper0NewPosition > stepper0.currentPosition() ? 0 : backlashSteps0;     
-      stepper0.moveTo(stepper0NewPosition);
+      stepper0.moveTo(stepper0NewPosition + currentMoveBacklash0);
       stepper0HasNewValues = false;
       
       #if MOVE_TIME_PRINTS
@@ -235,20 +235,20 @@ void i2cReceiveEvent(int howMany)
     }
   }
     
-  else if(howMany % 4 == 1) { //length 3 + cmd byte
+  else if(howMany % 5 == 1) { //length 3 + cmd byte
     int size = Wire.readBytes(i2cReceiveBuffer, howMany-1);
 
-    for(int i=0;i<size;i+=4) {
+    for(int i=0;i<size;i+=5) {
       uint8_t index = i2cReceiveBuffer[i];
-      uint8_t newSpeedRaw = i2cReceiveBuffer[i+1];
-      int16_t *value = (int16_t*)(&i2cReceiveBuffer[i+2]);
+      uint16_t *newSpeedRaw = (uint16_t*)(&i2cReceiveBuffer[i+1]);
+      int16_t *value = (int16_t*)(&i2cReceiveBuffer[i+3]);
       if(index == MOTOR0_INDEX) {
         target0 = *value;
         #ifdef DEBUG_PRINTS
           Serial.print("M0 -> ");
           Serial.println(target0);
         #endif
-        stepper0NewSpeedRaw = newSpeedRaw;
+        stepper0NewSpeedRaw = *newSpeedRaw;
                 
         stepper0HasNewValues = true;   
         stepper0NewPosition = DEGREES_TO_STEPS(target0) + calibrationSteps0;              
@@ -260,7 +260,7 @@ void i2cReceiveEvent(int howMany)
           Serial.println(target1);
         #endif
         
-        stepper1NewSpeedRaw = newSpeedRaw;
+        stepper1NewSpeedRaw = *newSpeedRaw;
         
         stepper1NewPosition = DEGREES_TO_STEPS(target1) + calibrationSteps1;
         stepper1HasNewValues = true;   

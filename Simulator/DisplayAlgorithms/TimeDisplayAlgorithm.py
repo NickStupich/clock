@@ -8,6 +8,7 @@ class TimeDisplayAlgorithm(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 	def __init__(self):
 		self.last_h = -1
 		self.last_m = -1
+		self.last_s = 0
 
 	def select(self):
 		self.last_h = -1
@@ -35,17 +36,14 @@ class TimeDisplayAlgorithm(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 			distance_to_move = np.abs(new_hand_angles - target_hand_angles)
 			target_move_time = 13
 
-			#TODO: put this in a func somewhere
-			t = target_move_time
-			a = Constants.ACCELERATION
-			d = distance_to_move
-
-			hand_speeds[:,:,:] = HandSpeed.CalculateHandSpeeds(t = t, d = distance_to_move)
-
-			# hand_speeds[:,:,:] = distance_to_move / target_move_time
+			if self.last_s <= (59-target_move_time):
+				hand_speeds[:,:,:] = HandSpeed.CalculateHandSpeeds(t = target_move_time, d = distance_to_move)
+			else:
+				print('not adjusting hand speeds. last_s: ', self.last_s)
 
 			target_hand_angles[:,:,:] = new_hand_angles[:, :, :]
 			new_move_hand_angles[:,:,:] = 1
 
 			self.last_h = h
 			self.last_m = m
+			self.last_s = s

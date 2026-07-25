@@ -13,6 +13,7 @@ class TimeDisplayAlgorithm2(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 	def __init__(self):
 		self.last_h = -1
 		self.last_m = -1
+		self.last_s = 0
 		self.first_time = True
 
 		self.next_target = np.zeros_like(DrawClock.clock_positions_base)
@@ -50,10 +51,14 @@ class TimeDisplayAlgorithm2(BaseDisplayAlgorithm.BaseDisplayAlgorithm):
 			y1 = np.where(base_move_duration_seconds[:,:,1] > (self.target_times_seconds[:,:,1]+MAX_BASE_MOVE_TIME_OFFSET_SECONDS))
 			self.next_target[:,:,1][y1] += 360
 
-			self.next_hand_speeds = HandSpeed.CalculateHandSpeeds(t = self.target_times_seconds, d = self.next_target - target_hand_angles)
+			if self.last_s < 59 - MOVE_TIME_SECONDS:
+				self.next_hand_speeds = HandSpeed.CalculateHandSpeeds(t = self.target_times_seconds, d = self.next_target - target_hand_angles)
+			else:
+				print('not adjusting hand speeds. last_s: ', self.last_s)
 
 			self.last_h = h
 			self.last_m = m
+			self.last_s = s
 
 		if self.first_time: #go straight there right away
 			target_hand_angles[:,:] = self.next_target[:,:]
