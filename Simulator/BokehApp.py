@@ -31,8 +31,9 @@ class BokehApp():
                 '/myapp': Application(FunctionHandler(self.make_document)),
                 }, 
             io_loop = io_loop, 
-            port = 5001,
-            allow_websocket_origin=["localhost:5001", "10.0.0.25:5001", "10.0.0.151:5001"],
+            port = 8080,
+	    address='0.0.0.0',
+            allow_websocket_origin=["*"],
 	    session_token_expiration=3000,
 	    websocket_max_message_size=10*1024*1024)
         server.start()
