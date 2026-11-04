@@ -10,7 +10,7 @@
 
 #define MOTOR_ROW 2
 #define MOTOR_COL 7
-#define VERSION_STR "V11"
+#define VERSION_STR "V12"
 
 #define DEBUG_PRINTS 1
 
