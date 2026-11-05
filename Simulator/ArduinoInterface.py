@@ -18,6 +18,8 @@ class ArduinoInterface(object):
 		if not test_environment:
 			self.i2c = smbus.SMBus(1)
 		self.name = "Test Arduino Interface" if test_environment else "I2C Arduino Interface"
+		
+		print("Initialized Arduino Interface: ", self.name)
 
 	def send(self, index, values):
 		# print('send: ', index, values)

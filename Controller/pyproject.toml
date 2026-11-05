@@ -15,5 +15,11 @@ dependencies = [
     "bokeh>=3.6.2",
 ]
 
+[project.optional-dependencies]
+pi = [
+    "rpi-gpio>=0.7.1",
+    "smbus>=1.1.post2",
+]
+
 [tool.uv]
 package = false
