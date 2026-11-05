@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Clock</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 16px; background: #fff; color: #222; }
+    canvas { max-width: 100%; height: auto; display: block; }
+    .controls { display: grid; grid-template-columns: max-content 1fr; gap: 8px 12px; align-items: center; margin-top: 12px; max-width: 900px; }
+    pre { grid-column: 1 / -1; margin: 0; white-space: pre-wrap; }
+    #status { font-size: 0.85em; color: #888; }
+    #status.ok { color: #2a8; }
+  </style>
+</head>
+<body>
+  <canvas id="clock"></canvas>
+  <div class="controls">
+    <label for="algorithm">Display type:</label>
+    <select id="algorithm" disabled></select>
+    <label for="overnight">Overnight mode:</label>
+    <select id="overnight" disabled></select>
+    <label for="calibration">Calibration image:</label>
+    <div>
+      <input id="calibration" class="calibration-input" type="file" accept="image/*">
+      <label>Take photo: <input id="calibration-camera" class="calibration-input" type="file" accept="image/*" capture="environment"></label>
+    </div>
+    <pre id="log"></pre>
+    <span>Interface:</span><span id="interface"></span>
+    <span>git commit:</span><span id="commit"></span>
+    <span>Connection:</span><span id="status">connecting</span>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

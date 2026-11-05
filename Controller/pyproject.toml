@@ -1,0 +1,19 @@
+[project]
+name = "clock-controller"
+version = "0.1.0"
+description = "Clock controller + web UI (FastAPI), reusing the Simulator algorithms"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "python-multipart>=0.0.12",
+    "numpy>=2.0",
+    "opencv-python>=4.11.0.86",
+    "matplotlib>=3.10.0",
+    "scipy>=1.15.2",
+    # Simulator/DrawClock.py imports bokeh at module level and the display algorithms import DrawClock.
+    "bokeh>=3.6.2",
+]
+
+[tool.uv]
+package = false
